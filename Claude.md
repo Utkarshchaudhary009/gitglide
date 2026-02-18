@@ -1,6 +1,6 @@
 # Code Review Bug-Catching Checklist
 
-After review is completed give well formated compact and exact problem and its fix.
+After review is completed write a `audit.md` file in well formated compact and exact problem and its fix.
 
 - [ ] Verify contracts: inputs/outputs, nullability, error semantics, and invariants changed by the diff.
 - [ ] Codebase must follow best practices of vercel and react. review one by one by invoking the skills.
@@ -30,7 +30,7 @@ After review is completed give well formated compact and exact problem and its f
 - `page.tsx` = route UI, `layout.tsx` = shared wrapper, `loading.tsx` = Suspense fallback, `error.tsx` = error boundary (must be client), `not-found.tsx` = 404, `route.ts` = API endpoint, `template.tsx` = remounts on nav, `default.tsx` = parallel route fallback
 - Dynamic: `[slug]`, Catch-all: `[...slug]`, Optional: `[[...slug]]`, Group: `(marketing)` (no URL), Private: `_folder`
 - Parallel: `@slot` (layout receives as props), Intercept: `(.)` same level, `(..)` up one, `(..)(..)` up two, `(...)` from root
-- Middleware v14-15: `middleware.ts` with `middleware()` export, v16+: `proxy.ts` with `proxy()` export
+- The "middleware.ts" file convention is deprecated. Please use "proxy.ts"
 
 ### RSC Boundaries (Server/Client)
 

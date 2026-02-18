@@ -1,14 +1,13 @@
-
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from '@/components/theme-provider'
 import { ClerkProvider } from '@clerk/nextjs'
-import { Toaster } from "@/components/ui/sonner"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/jules/app-sidebar"
-import { UserNav } from "@/components/jules/user-nav"
-import { Separator } from "@/components/ui/separator"
+import { Toaster } from '@/components/ui/sonner'
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/layout/sidebar'
+import { UserNav } from '@/components/home/user-nav'
+import { Separator } from '@/components/ui/separator'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,7 +15,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from '@/components/ui/breadcrumb'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -52,8 +51,8 @@ export default function RootLayout({
           >
             <SidebarProvider>
               <AppSidebar />
-              <main className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out w-full h-screen">
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+              <main className="flex h-screen w-full flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out">
+                <header className="bg-background flex h-16 shrink-0 items-center gap-2 border-b px-4">
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 h-4" />
                   <Breadcrumb>

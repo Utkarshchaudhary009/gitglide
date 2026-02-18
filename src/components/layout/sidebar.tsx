@@ -1,97 +1,197 @@
 'use client'
 
 import * as React from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/shared/utils'
-import { useSidebarStore } from '@/stores/use-sidebar-store'
-import { Button } from '@/components/ui/button'
 import {
-  LayoutDashboard,
+  Home,
   ListTodo,
-  Network,
-  Database,
+  Clock,
+  Plug,
+  Rocket,
   Settings,
-  Menu,
-  ChevronLeft,
-  Search,
+  Command,
+  Loader2,
 } from 'lucide-react'
-import { UserButton } from '@clerk/nextjs'
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/sessions', label: 'Sessions', icon: ListTodo },
-  { href: '/integrations', label: 'Integrations', icon: Network },
-  { href: '/sources', label: 'Sources', icon: Database },
-  { href: '/settings', label: 'Settings', icon: Settings },
-]
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarInput,
+} from '@/components/ui/sidebar'
+import { useSourcesStore } from '@/stores/use-sources-store'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
-export function Sidebar() {
-  const pathname = usePathname()
-  const { isCollapsed, toggle } = useSidebarStore()
+// This is sample data.
+const data = {
+  navMain: [
+    {
+      title: 'Home',
+      url: '/dashboard',
+      icon: Home,
+      isActive: true,
+    },
+    {
+      title: 'Tasks',
+      url: '/dashboard/tasks',
+      icon: ListTodo,
+    },
+    {
+      title: 'Scheduled Tasks',
+      url: '#',
+      icon: Clock,
+    },
+    {
+      title: 'Integrations',
+      url: '#',
+      icon: Plug,
+    },
+    {
+      title: 'Deployments',
+      url: '#',
+      icon: Rocket,
+    },
+    {
+      title: 'Settings',
+      url: '#',
+      icon: Settings,
+    },
+  ],
+}
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { sources, fetchSources, nextPageToken, hasMore, isLoading, error } =
+    useSourcesStore()
+  const [searchTerm, setSearchTerm] = useState('')
+  const observerTarget = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Initial fetch
+    fetchSources()
+  }, [fetchSources])
+
+  const handleLoadMore = useCallback(() => {
+    if (hasMore && !isLoading && nextPageToken) {
+      fetchSources(nextPageToken)
+    }
+  }, [hasMore, isLoading, nextPageToken, fetchSources])
+
+  useEffect(() => {
+    const target = observerTarget.current
+    if (!target) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          handleLoadMore()
+        }
+      },
+      { threshold: 1.0 }
+    )
+
+    observer.observe(target)
+
+    return () => observer.disconnect()
+  }, [handleLoadMore])
+
+  const filteredSources = sources.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.githubRepo.repo.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   return (
-    <aside
-      className={cn(
-        'bg-card relative flex flex-col border-r transition-all duration-300 ease-in-out',
-        isCollapsed ? 'w-16' : 'w-64'
-      )}
-    >
-      <div className="flex h-16 items-center justify-between border-b px-4">
-        {!isCollapsed && (
-          <span className="text-lg font-bold tracking-tight">GitGlide</span>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggle}
-          className={cn('ml-auto', isCollapsed ? 'h-8 w-8' : 'h-8 w-8')}
-        >
-          {isCollapsed ? (
-            <Menu className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <a href="#">
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Command className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="truncate font-semibold">GitGlide</span>
+                  <span className="truncate text-xs">Autonomous Agent</span>
+                </div>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {data.navMain.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={item.isActive}
+                  >
+                    <a href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-      <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname.startsWith(item.href)
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'hover:bg-accent hover:text-accent-foreground flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground',
-                isCollapsed && 'justify-center px-2'
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel>Repositories</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="mb-2 px-2">
+              <SidebarInput
+                placeholder="Search repos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <SidebarMenu>
+              {filteredSources.map((source) => (
+                <SidebarMenuItem key={source.id}>
+                  <SidebarMenuButton asChild>
+                    <a href={`/sources/${source.id}`}>
+                      <span>
+                        {source.githubRepo.owner}/{source.githubRepo.repo}
+                      </span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              {error && (
+                <div className="px-4 py-2 text-xs text-red-500">{error}</div>
               )}
-            >
-              <Icon className="h-4 w-4" />
-              {!isCollapsed && <span>{item.label}</span>}
-            </Link>
-          )
-        })}
-      </nav>
-
-      <div className="flex items-center justify-center border-t p-4">
-        <UserButton
-          showName={!isCollapsed}
-          appearance={{
-            elements: {
-              rootBox: 'w-full flex justify-center',
-              userButtonBox: isCollapsed
-                ? 'justify-center'
-                : 'justify-start w-full',
-            },
-          }}
-        />
-      </div>
-    </aside>
+              {filteredSources.length === 0 && !isLoading && !error && (
+                <div className="text-muted-foreground px-4 py-2 text-xs">
+                  No repositories found.
+                </div>
+              )}
+              {/* Sentinel for infinite scroll */}
+              {hasMore && (
+                <div ref={observerTarget} className="flex justify-center py-4">
+                  {isLoading && (
+                    <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                  )}
+                </div>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter></SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   )
 }

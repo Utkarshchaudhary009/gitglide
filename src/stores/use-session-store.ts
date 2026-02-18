@@ -60,7 +60,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       set((state) => ({
         sessions: [newSession, ...state.sessions],
         activeSessionId: newSession.id,
-        isLoading: false
+        isLoading: false,
       }))
       return newSession
     } catch (error) {
@@ -79,7 +79,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       set((state) => ({
         sessions: state.sessions.map((s) => (s.id === id ? session : s)),
         activeSessionId: id,
-        isLoading: false
+        isLoading: false,
       }))
 
       // If session not in list (e.g. direct link), add it
@@ -103,10 +103,10 @@ export const useSessionStore = create<SessionStore>((set) => ({
       if (!response.ok) return
       const session = await response.json()
       set((state) => ({
-        sessions: state.sessions.map((s) => s.id === id ? session : s)
+        sessions: state.sessions.map((s) => (s.id === id ? session : s)),
       }))
     } catch (error) {
-      console.error("Failed to refresh session", error)
+      console.error('Failed to refresh session', error)
     }
   },
 
@@ -115,32 +115,37 @@ export const useSessionStore = create<SessionStore>((set) => ({
     // For simplicity, we just fetch mostly. Could add `if(state.activities[sessionId]) return` for strict cache.
     // But "refreshed as new data come" implies we want fresh data.
     try {
-      const response = await fetch(`/api/jules/sessions/${sessionId}/activities`)
+      const response = await fetch(
+        `/api/jules/sessions/${sessionId}/activities`
+      )
       if (!response.ok) throw new Error('Failed to fetch activities')
       const activities = await response.json()
       set((state) => ({
-        activities: { ...state.activities, [sessionId]: activities }
+        activities: { ...state.activities, [sessionId]: activities },
       }))
     } catch (error) {
-      console.error("Failed to fetch activities", error)
+      console.error('Failed to fetch activities', error)
     }
   },
 
   sendMessage: async (sessionId: string, message: string) => {
     // Optimistic update could go here, but for now we just send
     try {
-      const response = await fetch(`/api/jules/sessions/${sessionId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
-      })
+      const response = await fetch(
+        `/api/jules/sessions/${sessionId}/messages`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+        }
+      )
       if (!response.ok) throw new Error('Failed to send message')
 
       // Optionally refresh activities immediately
-      // get().fetchActivities(sessionId) 
+      // get().fetchActivities(sessionId)
       // But usually we rely on the response or a subsequent refresh
     } catch (error) {
-      console.error("Failed to send message", error)
+      console.error('Failed to send message', error)
       throw error
     }
   },
@@ -153,7 +158,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
       })
       if (!response.ok) throw new Error('Failed to approve plan')
     } catch (error) {
-      console.error("Failed to approve plan", error)
+      console.error('Failed to approve plan', error)
       throw error
     }
   },

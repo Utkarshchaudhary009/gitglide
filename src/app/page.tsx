@@ -1,34 +1,86 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+'use client'
 
-export default function LandingPage() {
+import { useUser } from '@clerk/nextjs'
+import { toast } from 'sonner'
+import { Hexagon, ArrowUp } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { BranchSelector } from '@/components/home/branch-selector'
+import { ActionSelector } from '@/components/home/action-selector'
+import { RecentActivity } from '@/components/home/recent-activity'
+import { useState } from 'react'
+import { useSessionStore } from '@/stores/use-session-store'
+import { useRouter } from 'next/navigation'
+
+export default function HomePage() {
+  const { user } = useUser()
+
+  const [prompt, setPrompt] = useState('')
+  const router = useRouter()
+  const { createSession } = useSessionStore()
+
+  const handleCreate = async () => {
+    if (!prompt.trim()) return
+    try {
+      const session = await createSession(prompt)
+      router.push(`/sessions/${session.id}`)
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to create session')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleCreate()
+    }
+  }
+
   return (
-    <div className="bg-background flex min-h-screen flex-col">
-      <header className="flex h-16 items-center border-b px-6">
-        <div className="text-xl font-bold">GitGlide</div>
-        <div className="ml-auto flex gap-4">
-          <Link href="/sign-in">
-            <Button variant="ghost">Sign In</Button>
-          </Link>
-          <Link href="/sign-up">
-            <Button>Get Started</Button>
-          </Link>
+    <div className="mx-auto flex max-w-5xl flex-col gap-12 py-12 md:py-20">
+      {/* Hero Section */}
+      <div className="flex flex-col items-center gap-6 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white shadow-[0_0_40px_-5px_theme(colors.white)]">
+          <Hexagon className="h-8 w-8 text-black" fill="black" />
         </div>
-      </header>
-      <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
-          Autonomous Coding Agent Wrapper
-        </h1>
-        <p className="text-muted-foreground max-w-[600px] text-xl">
-          Beautiful UI for Jules. Automate your code reviews and deployment
-          fixes.
-        </p>
-        <div className="flex gap-4">
-          <Link href="/dashboard">
-            <Button size="lg">Go to Dashboard</Button>
-          </Link>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-medium tracking-tight">
+            Good Afternoon, {user?.firstName || 'there'} 👋
+          </h1>
+          {/* Subheading removed per request */}
         </div>
-      </main>
+      </div>
+
+      {/* Main Input Box */}
+      <div className="group bg-card/50 focus-within:ring-ring relative rounded-2xl border shadow-sm transition-all focus-within:ring-1">
+        <Textarea
+          placeholder="Describe what you want the AI agent to do..."
+          className="placeholder:text-muted-foreground/50 min-h-[120px] w-full resize-none border-0 bg-transparent p-6 text-lg focus-visible:ring-0"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+
+        <div className="flex items-center justify-between px-4 pb-4">
+          <div className="flex items-center gap-2">
+            <BranchSelector />
+            <ActionSelector />
+          </div>
+          <div>
+            <Button
+              size="icon"
+              className="h-10 w-10 shrink-0 rounded-full"
+              onClick={handleCreate}
+            >
+              <ArrowUp className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <RecentActivity />
     </div>
   )
 }
