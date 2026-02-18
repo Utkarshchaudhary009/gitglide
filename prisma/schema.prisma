@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserSettings {
+  id              String   @id @default(cuid())
+  clerkUserId     String   @unique
+  julesApiKey     String?  // encrypted
+  githubToken     String?  // encrypted
+  vercelToken     String?  // encrypted
+  defaultSourceId String?
+  theme           String   @default("dark")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model IntegrationConfig {
+  id              String   @id @default(cuid())
+  clerkUserId     String
+  type            String   // "github_review" | "vercel_fix"
+  enabled         Boolean  @default(false)
+  config          Json     @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@unique([clerkUserId, type])
+}
+
+model WebhookLog {
+  id              String   @id @default(cuid())
+  clerkUserId     String?
+  source          String   // "github" | "vercel"
+  event           String
+  payload         Json
+  status          String   @default("received")
+  julesSessionId  String?
+  createdAt       DateTime @default(now())
+}
