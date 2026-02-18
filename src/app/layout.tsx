@@ -44,7 +44,7 @@ export default function RootLayout({
           >
             <SidebarProvider>
               <AppSidebar />
-              <main className="flex h-screen w-full flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out">
+              <main className="flex h-dvh w-full flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out">
                 <header className="bg-background flex h-16 shrink-0 items-center gap-2 border-b px-4">
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 h-4" />

@@ -22,7 +22,7 @@
 - **Other**: styles → `src/app/globals.css`, assets → `public/`, DB → `prisma/schema.prisma`, docs → `docs/` & `refrence/`.
 
 ## Commands (Bun only — never npm/pnpm)
-- `bun logs:deployment` — inspect latest Vercel deploy (streams logs on failure, summary on success).
+- `bun logs:deployment` then wait for 20sec — inspect latest Vercel deploy (streams logs on failure, summary on success).
 - **Never run locally** (PC too weak): `bun dev|build|start|lint|format|format:check|type-check`.
 
 ## Coding Style

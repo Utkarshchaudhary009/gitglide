@@ -248,7 +248,7 @@ export default function SessionDetailPage() {
           onKeyDown={handleKeyDown}
           className="flex-1"
           disabled={
-            session.state === 'TERMINATED' || session.state === 'CANCELLED'
+            session.state === 'FAILED' || session.state === 'COMPLETED'
           }
         />
         <Button
@@ -256,8 +256,8 @@ export default function SessionDetailPage() {
           onClick={handleSendMessage}
           disabled={
             !inputValue.trim() ||
-            session.state === 'TERMINATED' ||
-            session.state === 'CANCELLED'
+            session.state === 'FAILED' ||
+            session.state === 'COMPLETED'
           }
         >
           <Send className="h-4 w-4" />
