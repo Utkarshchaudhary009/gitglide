@@ -46,3 +46,4 @@ refrence
 .env*.local
 .claude/settings.local.json
 MASTER-PLAN.md
+.claude/settings.json
