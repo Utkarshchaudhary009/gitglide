@@ -28,6 +28,7 @@
 ## Coding Style
 - Follow Next.js App Router conventions; use `proxy.ts` instead of deprecated `middleware.ts`.
 - **shadcn/ui**: install via `bunx --bun shadcn@latest add <name>` — don't write manually. Existing components in `components/ui/`. [Docs](https://ui.shadcn.com/).
+- **Tailwind CSS v4**: Use `@import "tw-animate-css";` in `globals.css` (instead of `tailwindcss-animate` plugin).
 - **All errors (type & lint) must be fixed** — never skip or ignore.
 
 ## Commit & PR Guidelines
