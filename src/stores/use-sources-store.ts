@@ -45,12 +45,12 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
       const nextToken = data.nextPageToken
 
       set((state) => {
-        const combined = pageToken
+        const combined: Source[] = pageToken
           ? [...state.sources, ...newSources]
           : newSources
         // Deduplicate by ID
-        const unique = Array.from(
-          new Map(combined.map((s: Source) => [s.id, s])).values()
+        const unique: Source[] = Array.from(
+          new Map(combined.map((s) => [s.id, s])).values()
         )
         return {
           sources: unique,
@@ -75,14 +75,16 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
       if (!response.ok) throw new Error('Failed to fetch source')
       const source = await response.json()
 
-      set((state) => ({
-        sources: Array.from(
-          new Map(
-            [...state.sources, source].map((s: Source) => [s.id, s])
-          ).values()
-        ),
-        isFetchingSource: false,
-      }))
+      set((state) => {
+        const combined: Source[] = [...state.sources, source]
+        const unique: Source[] = Array.from(
+          new Map(combined.map((s) => [s.id, s])).values()
+        )
+        return {
+          sources: unique,
+          isFetchingSource: false,
+        }
+      })
       return source
     } catch (error) {
       set({ error: (error as Error).message, isFetchingSource: false })
