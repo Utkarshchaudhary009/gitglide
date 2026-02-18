@@ -12,20 +12,27 @@ import { useState } from 'react'
 import { useSessionStore } from '@/stores/use-session-store'
 import { useRouter } from 'next/navigation'
 
+function getTimeOfDayGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 18) return 'Good Afternoon'
+  return 'Good Evening'
+}
+
 export default function HomePage() {
   const { user } = useUser()
 
   const [prompt, setPrompt] = useState('')
   const router = useRouter()
-  const { createSession } = useSessionStore()
+  const { createSession, isLoading } = useSessionStore()
 
   const handleCreate = async () => {
-    if (!prompt.trim()) return
+    if (!prompt.trim() || isLoading) return
     try {
       const session = await createSession(prompt)
       router.push(`/sessions/${session.id}`)
     } catch (error) {
-      console.error(error)
+      console.error('Failed to create session', error)
       toast.error('Failed to create session')
     }
   }
@@ -46,7 +53,7 @@ export default function HomePage() {
         </div>
         <div className="space-y-1">
           <h1 className="text-3xl font-medium tracking-tight">
-            Good Afternoon, {user?.firstName || 'there'} 👋
+            {getTimeOfDayGreeting()}, {user?.firstName || 'there'} 👋
           </h1>
           {/* Subheading removed per request */}
         </div>
@@ -72,6 +79,7 @@ export default function HomePage() {
               size="icon"
               className="h-10 w-10 shrink-0 rounded-full"
               onClick={handleCreate}
+              disabled={isLoading}
             >
               <ArrowUp className="h-5 w-5" />
             </Button>

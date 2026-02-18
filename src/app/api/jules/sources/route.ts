@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-
-const JULES_API_URL =
-  process.env.JULES_API_URL || 'https://jules.googleapis.com/v1alpha'
-const JULES_API_KEY = process.env.JULES_API_KEY
+import {
+  JULES_API_KEY,
+  JULES_API_URL,
+  validateJulesRequest,
+} from '@/lib/jules-server'
 
 export async function GET(req: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const validationError = await validateJulesRequest()
+  if (validationError) return validationError
 
   if (!JULES_API_KEY) {
     return NextResponse.json(
@@ -26,6 +24,9 @@ export async function GET(req: NextRequest) {
   if (pageSize) queryParams.set('pageSize', pageSize)
   if (pageToken) queryParams.set('pageToken', pageToken)
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
   try {
     const response = await fetch(
       `${JULES_API_URL}/sources?${queryParams.toString()}`,
@@ -34,8 +35,10 @@ export async function GET(req: NextRequest) {
           'x-goog-api-key': JULES_API_KEY,
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
       }
     )
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       const error = await response.text()
@@ -44,7 +47,14 @@ export async function GET(req: NextRequest) {
 
     const data = await response.json()
     return NextResponse.json(data)
-  } catch (error) {
+  } catch (error: unknown) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      return NextResponse.json(
+        { error: 'Upstream request timed out' },
+        { status: 504 }
+      )
+    }
     console.error('Failed to fetch sources:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },

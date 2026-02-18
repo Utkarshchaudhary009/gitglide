@@ -10,9 +10,14 @@ import {
 } from '@/components/ui/select'
 import { Zap, BookOpen } from 'lucide-react'
 
-export function ActionSelector() {
+interface ActionSelectorProps {
+  value?: string
+  onValueChange?: (value: string) => void
+}
+
+export function ActionSelector({ value, onValueChange }: ActionSelectorProps) {
   return (
-    <Select defaultValue="planning">
+    <Select value={value} onValueChange={onValueChange} defaultValue="planning">
       <SelectTrigger className="text-muted-foreground hover:bg-muted/50 hover:text-foreground w-[140px] border-0 bg-transparent focus:ring-0">
         <SelectValue placeholder="Action Type" />
       </SelectTrigger>

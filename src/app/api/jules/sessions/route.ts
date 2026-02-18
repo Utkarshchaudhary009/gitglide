@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-
-// Assumes JULES_API_KEY is set in env
-const JULES_API_URL =
-  process.env.JULES_API_URL || 'https://jules.googleapis.com/v1alpha'
-const JULES_API_KEY = process.env.JULES_API_KEY
+import {
+  JULES_API_KEY,
+  JULES_API_URL,
+  validateJulesRequest,
+} from '@/lib/jules-server'
 
 export async function GET(req: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const validationError = await validateJulesRequest()
+  if (validationError) return validationError
 
   if (!JULES_API_KEY) {
     return NextResponse.json(
@@ -55,10 +52,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const validationError = await validateJulesRequest()
+  if (validationError) return validationError
 
   if (!JULES_API_KEY) {
     return NextResponse.json(
@@ -81,7 +76,7 @@ export async function POST(req: NextRequest) {
         'x-goog-api-key': JULES_API_KEY,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ prompt: body.prompt }),
     })
 
     if (!response.ok) {

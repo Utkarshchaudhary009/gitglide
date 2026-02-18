@@ -45,14 +45,14 @@ export interface Activity {
   originator: 'user' | 'agent' | 'system'
   description: string
   createTime: string
-  artifacts?: any[]
-  planGenerated?: any
-  planApproved?: any
-  userMessaged?: any
-  agentMessaged?: any
-  progressUpdated?: any
-  sessionCompleted?: any
-  sessionFailed?: any
+  artifacts?: unknown[]
+  planGenerated?: Record<string, unknown>
+  planApproved?: Record<string, unknown>
+  userMessaged?: Record<string, unknown>
+  agentMessaged?: Record<string, unknown>
+  progressUpdated?: Record<string, unknown>
+  sessionCompleted?: Record<string, unknown>
+  sessionFailed?: Record<string, unknown>
 }
 
 export interface Source {

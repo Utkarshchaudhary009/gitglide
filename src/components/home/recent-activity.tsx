@@ -1,12 +1,12 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSessionStore } from '@/stores/use-session-store'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Clock, PlayCircle, PauseCircle, CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
+import { Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Session } from '@/types/jules'
 
@@ -20,14 +20,14 @@ interface DisplaySession {
 
 export function RecentActivity() {
   const { sessions, fetchSessions, isLoading, error } = useSessionStore()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [activeTab, setActiveTab] = useState('tasks')
 
   useEffect(() => {
     fetchSessions()
   }, [fetchSessions])
 
   const mapSessionToDisplay = (session: Session): DisplaySession => {
-    // Extract repo name if possible, or use source string
-    // Assuming source is like "projects/.../locations/.../sources/my-repo"
     const sourceName =
       session.sourceContext?.source?.split('/').pop() || 'Unknown Repo'
 
@@ -44,11 +44,21 @@ export function RecentActivity() {
 
   const displaySessions = sessions.map(mapSessionToDisplay)
 
+  const filteredSessions = displaySessions.filter(
+    (session) =>
+      session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      session.repo.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Tabs defaultValue="tasks" className="w-[400px]">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-[400px]"
+          >
             <TabsList className="gap-2 bg-transparent p-0">
               <TabsTrigger
                 value="all"
@@ -82,67 +92,89 @@ export function RecentActivity() {
           <Input
             placeholder="Search by title or repo name..."
             className="bg-muted/50 h-9 rounded-full border-0"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="space-y-6">
-        {isLoading ? (
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsContent value="all" className="mt-0 space-y-6">
+          {renderSessionList(filteredSessions)}
+        </TabsContent>
+        <TabsContent value="tasks" className="mt-0 space-y-6">
+          {renderSessionList(filteredSessions)}
+        </TabsContent>
+        <TabsContent value="scheduled" className="mt-0 space-y-6">
           <div className="text-muted-foreground py-8 text-center">
-            Loading activity...
+            Scheduled tasks coming soon
           </div>
-        ) : error ? (
-          <div className="py-8 text-center text-red-500">{error}</div>
-        ) : displaySessions.length === 0 ? (
-          <div className="text-muted-foreground py-8 text-center">
-            No recent activity
-          </div>
-        ) : (
-          <>
-            {/* Grouping logic could be added here, simplified for now */}
-            <div>
-              <h3 className="text-muted-foreground mb-4 text-sm font-medium">
-                Recent
-              </h3>
-              <div className="space-y-2">
-                {displaySessions.map((session) => (
-                  <TaskCard key={session.id} session={session} />
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
+
+  function renderSessionList(sessions: DisplaySession[]) {
+    if (isLoading) {
+      return (
+        <div className="text-muted-foreground py-8 text-center">
+          Loading activity...
+        </div>
+      )
+    }
+    if (error) {
+      return <div className="py-8 text-center text-red-500">{error}</div>
+    }
+    if (sessions.length === 0) {
+      return (
+        <div className="text-muted-foreground py-8 text-center">
+          No recent activity
+        </div>
+      )
+    }
+    return (
+      <div>
+        <h3 className="text-muted-foreground mb-4 text-sm font-medium">
+          Recent
+        </h3>
+        <div className="space-y-2">
+          {sessions.map((session) => (
+            <TaskCard key={session.id} session={session} />
+          ))}
+        </div>
+      </div>
+    )
+  }
 }
 
 function TaskCard({ session }: { session: DisplaySession }) {
   const isRunning =
     session.state === 'IN_PROGRESS' || session.state === 'RUNNING'
   return (
-    <div className="group border-border/40 bg-card/40 hover:bg-card/60 hover:border-border/80 flex items-center justify-between rounded-xl border p-4 transition-all">
-      <div className="flex items-center gap-4">
-        <div
-          className={`h-2 w-2 rounded-full ${isRunning ? 'animate-pulse bg-green-500' : 'bg-yellow-500'}`}
-        />
-        <div>
-          <h4 className="text-sm font-medium">{session.title}</h4>
-          <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
-            <span>{session.repo}</span>
-            <span>•</span>
-            <span>{session.updateTime}</span>
+    <Link href={`/sessions/${session.id}`}>
+      <div className="group border-border/40 bg-card/40 hover:bg-card/60 hover:border-border/80 flex items-center justify-between rounded-xl border p-4 transition-all">
+        <div className="flex items-center gap-4">
+          <div
+            className={`h-2 w-2 rounded-full ${isRunning ? 'animate-pulse bg-green-500' : 'bg-yellow-500'}`}
+          />
+          <div>
+            <h4 className="text-sm font-medium">{session.title}</h4>
+            <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
+              <span>{session.repo}</span>
+              <span>•</span>
+              <span>{session.updateTime}</span>
+            </div>
           </div>
         </div>
+        <div>
+          <Badge
+            variant={isRunning ? 'default' : 'secondary'}
+            className={`${isRunning ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-yellow-500/10 text-yellow-500'}`}
+          >
+            {session.state}
+          </Badge>
+        </div>
       </div>
-      <div>
-        <Badge
-          variant={isRunning ? 'default' : 'secondary'}
-          className={`${isRunning ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-yellow-500/10 text-yellow-500'}`}
-        >
-          {session.state}
-        </Badge>
-      </div>
-    </div>
+    </Link>
   )
 }

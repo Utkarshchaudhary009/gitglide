@@ -1,3 +1,5 @@
+'use client'
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,11 +17,13 @@ import {
 import { LogOut, Key, Box, Monitor } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useClerk, useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 
 export function UserNav() {
   const { theme, setTheme } = useTheme()
   const { user } = useUser()
   const { signOut } = useClerk()
+  const router = useRouter()
 
   if (!user) return null
 
@@ -38,7 +42,10 @@ export function UserNav() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user.imageUrl} />
+                <AvatarImage
+                  src={user.imageUrl}
+                  alt={user.fullName || 'User'}
+                />
                 <AvatarFallback>{user.firstName?.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="grid gap-0.5">
@@ -49,11 +56,6 @@ export function UserNav() {
                   {user.primaryEmailAddress?.emailAddress}
                 </CardDescription>
               </div>
-            </div>
-            <div className="text-muted-foreground mt-2 text-xs">
-              {/* Example of accessing public metadata if available */}
-              {/* {session.user.publicMetadata.role as string} */}
-              3/5 messages remaining today
             </div>
           </CardHeader>
           <div className="border-t" />
@@ -78,6 +80,7 @@ export function UserNav() {
             <Button
               variant="ghost"
               className="h-8 w-full justify-start gap-2 px-2 text-sm font-normal"
+              onClick={() => router.push('/dashboard/api-keys')}
             >
               <Key className="h-4 w-4" />
               <span>API Keys</span>
@@ -85,6 +88,7 @@ export function UserNav() {
             <Button
               variant="ghost"
               className="h-8 w-full justify-start gap-2 px-2 text-sm font-normal"
+              onClick={() => router.push('/dashboard/sandboxes')}
             >
               <Box className="h-4 w-4" />
               <span>Sandboxes</span>

@@ -76,23 +76,21 @@ export const useSessionStore = create<SessionStore>((set) => ({
       if (!response.ok) throw new Error('Failed to fetch session')
       const session = await response.json()
 
-      set((state) => ({
-        sessions: state.sessions.map((s) => (s.id === id ? session : s)),
-        activeSessionId: id,
-        isLoading: false,
-      }))
-
-      // If session not in list (e.g. direct link), add it
       set((state) => {
-        if (!state.sessions.find((s) => s.id === id)) {
-          return { sessions: [session, ...state.sessions] }
+        const exists = state.sessions.some((s) => s.id === id)
+        return {
+          sessions: exists
+            ? state.sessions.map((s) => (s.id === id ? session : s))
+            : [session, ...state.sessions],
+          activeSessionId: id,
+          isLoading: false,
         }
-        return {}
       })
 
       return session
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false })
+      throw error
     }
   },
 

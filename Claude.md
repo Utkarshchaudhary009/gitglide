@@ -1,6 +1,6 @@
 # Code Review Bug-Catching Checklist
 
-After review is completed write a `audit.md` file in well formated compact and exact problem and its fix.
+After review is completed, write an `audit.md` file containing a well-formatted, compact, and exact description of the problem and its fix.
 
 - [ ] Verify contracts: inputs/outputs, nullability, error semantics, and invariants changed by the diff.
 - [ ] Codebase must follow best practices of vercel and react. review one by one by invoking the skills.
