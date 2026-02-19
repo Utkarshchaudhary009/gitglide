@@ -2,7 +2,8 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, Key } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { LogOut, Key, Palette, Sun, Moon, Monitor, Check } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Popover,
@@ -20,6 +21,48 @@ interface UserMenuProps {
   }
   onApiKeys?: () => void
   onLogOut?: () => void
+}
+
+function ThemeSelector() {
+  const { theme, setTheme } = useTheme()
+  const [open, setOpen] = React.useState(false)
+
+  const themes = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+  ]
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" className="w-full justify-start gap-2">
+          <Palette className="h-4 w-4" />
+          Theme
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-40 p-1" align="start" side="left" sideOffset={8}>
+        {themes.map((t) => {
+          const Icon = t.icon
+          return (
+            <Button
+              key={t.value}
+              variant="ghost"
+              className="w-full justify-start gap-2"
+              onClick={() => {
+                setTheme(t.value)
+                setOpen(false)
+              }}
+            >
+              <Icon className="h-4 w-4" />
+              {t.label}
+              {theme === t.value && <Check className="ml-auto h-4 w-4" />}
+            </Button>
+          )
+        })}
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
@@ -91,6 +134,7 @@ export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
             <Key className="h-4 w-4" />
             API Keys
           </Button>
+          <ThemeSelector />
           <Button
             variant="ghost"
             className="text-destructive hover:text-destructive w-full justify-start gap-2"

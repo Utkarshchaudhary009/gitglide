@@ -11,8 +11,12 @@ import {
   Rocket,
   Settings,
   FolderGit2,
+  GitBranch,
+  Loader2,
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useSourcesStore } from '@/stores/use-sources-store'
+import { useSessionStore } from '@/stores/use-session-store'
 import { cn } from '@/lib/utils'
 import {
   Sidebar,
@@ -34,7 +38,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Card, CardContent } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
 
 const navItems = [
   { title: 'Home', icon: Home, href: '/app' },
@@ -67,7 +72,7 @@ function NavItem({
         <span
           className={cn(
             'transition-opacity duration-200',
-            isCollapsed ? 'opacity-0 w-0' : 'opacity-100'
+            isCollapsed ? 'w-0 opacity-0' : 'opacity-100'
           )}
         >
           {item.title}
@@ -112,9 +117,14 @@ function SidebarNav() {
   )
 }
 
-function RepositoriesSection() {
+function SessionsSection() {
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
+  const { sessions, fetchSessions, isLoading } = useSessionStore()
+
+  React.useEffect(() => {
+    fetchSessions()
+  }, [fetchSessions])
 
   if (isCollapsed) {
     return (
@@ -122,7 +132,69 @@ function RepositoriesSection() {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center justify-center p-2">
-              <FolderGit2 className="h-4 w-4 text-muted-foreground" />
+              <ListTodo className="text-muted-foreground h-4 w-4" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="right">Sessions</TooltipContent>
+        </Tooltip>
+      </SidebarGroup>
+    )
+  }
+
+  const recentSessions = sessions.slice(0, 5)
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="flex items-center justify-between">
+        <span>Sessions</span>
+        {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <ScrollArea className="h-[120px]">
+          <SidebarMenu>
+            {recentSessions.length === 0 ? (
+              <div className="text-muted-foreground px-2 py-1 text-xs">
+                No sessions yet
+              </div>
+            ) : (
+              recentSessions.map((session) => (
+                <SidebarMenuItem key={session.id}>
+                  <SidebarMenuButton asChild size="sm" className="text-xs">
+                    <Link href={`/app/sessions/${session.id}`}>
+                      <span className="truncate">
+                        {session.title || session.prompt.slice(0, 30)}
+                      </span>
+                      <Badge variant="outline" className="ml-auto text-[10px]">
+                        {session.state.slice(0, 8)}
+                      </Badge>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))
+            )}
+          </SidebarMenu>
+        </ScrollArea>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+}
+
+function RepositoriesSection() {
+  const { state } = useSidebar()
+  const isCollapsed = state === 'collapsed'
+  const { sources, fetchSources, isLoading } = useSourcesStore()
+
+  React.useEffect(() => {
+    fetchSources()
+  }, [fetchSources])
+
+  if (isCollapsed) {
+    return (
+      <SidebarGroup>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center justify-center p-2">
+              <FolderGit2 className="text-muted-foreground h-4 w-4" />
             </div>
           </TooltipTrigger>
           <TooltipContent side="right">Repositories</TooltipContent>
@@ -131,17 +203,39 @@ function RepositoriesSection() {
     )
   }
 
+  const recentSources = sources.slice(0, 5)
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Repositories</SidebarGroupLabel>
+      <SidebarGroupLabel className="flex items-center justify-between">
+        <span>Repositories</span>
+        {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+      </SidebarGroupLabel>
       <SidebarGroupContent>
-        <Card className="bg-muted/50 border-0">
-          <CardContent className="p-3">
-            <p className="text-xs text-muted-foreground">
-              Sign in to view repositories.
-            </p>
-          </CardContent>
-        </Card>
+        <ScrollArea className="h-[120px]">
+          <SidebarMenu>
+            {recentSources.length === 0 ? (
+              <div className="text-muted-foreground px-2 py-1 text-xs">
+                No repositories found
+              </div>
+            ) : (
+              recentSources.map((source) => (
+                <SidebarMenuItem key={source.id}>
+                  <SidebarMenuButton asChild size="sm" className="text-xs">
+                    <Link
+                      href={`/app/repos/${source.githubRepo.owner}/${source.githubRepo.repo}`}
+                    >
+                      <GitBranch className="h-3 w-3" />
+                      <span className="truncate">
+                        {source.githubRepo.owner}/{source.githubRepo.repo}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))
+            )}
+          </SidebarMenu>
+        </ScrollArea>
       </SidebarGroupContent>
     </SidebarGroup>
   )
@@ -157,6 +251,7 @@ function AppSidebarContent() {
         <SidebarNav />
       </SidebarContent>
       <SidebarFooter>
+        <SessionsSection />
         <RepositoriesSection />
       </SidebarFooter>
     </Sidebar>

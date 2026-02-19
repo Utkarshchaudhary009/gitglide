@@ -1,10 +1,18 @@
 'use client'
 
 import * as React from 'react'
-import { ArrowUp } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowUp, Zap, ClipboardList, ChevronDown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { BranchSelector } from '@/components/layout/branch-selector'
+import { useSessionStore } from '@/stores/use-session-store'
 
 interface ChatInputProps {
   onSend?: (message: string) => void
@@ -14,6 +22,15 @@ interface ChatInputProps {
 
 type Mode = 'fast' | 'plan'
 
+const modeConfig = {
+  fast: { label: 'Fast', icon: Zap, description: 'Quick responses' },
+  plan: {
+    label: 'Plan',
+    icon: ClipboardList,
+    description: 'Detailed planning',
+  },
+}
+
 export function ChatInput({
   onSend,
   placeholder = 'Describe what you want the AI agent to do...',
@@ -22,11 +39,23 @@ export function ChatInput({
   const [message, setMessage] = React.useState('')
   const [mode, setMode] = React.useState<Mode>('fast')
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const router = useRouter()
+  const { createSession, isLoading } = useSessionStore()
 
-  const handleSubmit = () => {
-    if (message.trim() && onSend) {
-      onSend(message)
-      setMessage('')
+  const handleSubmit = async () => {
+    if (message.trim()) {
+      if (onSend) {
+        onSend(message)
+        setMessage('')
+      } else {
+        try {
+          const session = await createSession(message)
+          setMessage('')
+          router.push(`/app/sessions/${session.id}`)
+        } catch {
+          console.error('Failed to create session')
+        }
+      }
     }
   }
 
@@ -37,55 +66,71 @@ export function ChatInput({
     }
   }
 
+  const CurrentModeIcon = modeConfig[mode].icon
+
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+      <div className="border-border bg-card rounded-xl border p-3 shadow-sm">
         <Textarea
           ref={textareaRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          disabled={disabled}
+          disabled={disabled || isLoading}
           className="min-h-[60px] resize-none border-0 bg-transparent p-0 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
           rows={2}
         />
         <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'h-7 rounded-md px-3 text-xs font-medium transition-colors',
-                mode === 'fast'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setMode('fast')}
-            >
-              Fast
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'h-7 rounded-md px-3 text-xs font-medium transition-colors',
-                mode === 'plan'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setMode('plan')}
-            >
-              Plan
-            </Button>
+          <div className="flex items-center gap-2">
+            <BranchSelector />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 px-2.5 text-xs font-medium"
+                >
+                  <CurrentModeIcon className="h-3.5 w-3.5" />
+                  {modeConfig[mode].label}
+                  <ChevronDown className="text-muted-foreground h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {(Object.keys(modeConfig) as Mode[]).map((key) => {
+                  const Icon = modeConfig[key].icon
+                  return (
+                    <DropdownMenuItem
+                      key={key}
+                      onClick={() => setMode(key)}
+                      className="gap-2"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {modeConfig[key].label}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {modeConfig[key].description}
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <Button
             size="icon"
             className="h-8 w-8 rounded-full"
             onClick={handleSubmit}
-            disabled={disabled || !message.trim()}
+            disabled={disabled || isLoading || !message.trim()}
           >
-            <ArrowUp className="h-4 w-4" />
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowUp className="h-4 w-4" />
+            )}
             <span className="sr-only">Send</span>
           </Button>
         </div>

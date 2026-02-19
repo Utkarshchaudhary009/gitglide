@@ -2,12 +2,10 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { Menu, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { BranchSelector } from './branch-selector'
 import { UserMenu } from '@/components/user/user-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { Separator } from '@/components/ui/separator'
 
 interface HeaderProps {
   organization?: string
@@ -48,10 +46,6 @@ export function Header({
             <ExternalLink className="h-3.5 w-3.5" />
           </Link>
         </div>
-
-        <Separator orientation="vertical" className="mx-2 h-6" />
-        
-        <BranchSelector />
       </div>
 
       <UserMenu user={user} onApiKeys={onApiKeys} onLogOut={onLogOut} />

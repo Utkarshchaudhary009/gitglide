@@ -14,8 +14,8 @@
     "prepare": "husky",
     "postinstall": "bun prisma generate",
     "logs:deployment": "bash scripts/deployment-logs.sh",
-    "m":"ollama run claude --model minimax-m2.5:cloud",
-    "g":"ollama run claude --model glm-5:cloud"
+    "m": "ollama launch claude --model minimax-m2.5:cloud",
+    "g": "ollama launch claude --model glm-5:cloud"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
