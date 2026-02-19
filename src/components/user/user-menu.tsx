@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
 import { LogOut, Key } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -22,16 +23,23 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
-  const initials = user?.name
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'U'
+  const router = useRouter()
+  const initials =
+    user?.name
+      ?.split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || 'U'
 
   if (!user) {
     return (
-      <Button variant="outline" size="sm" className="rounded-full">
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full"
+        onClick={() => router.push('/sign-in')}
+      >
         Sign in
       </Button>
     )
@@ -67,7 +75,7 @@ export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
             </AvatarFallback>
           </Avatar>
           <div className="text-center">
-            <p className="font-medium text-foreground">{user.name}</p>
+            <p className="text-foreground font-medium">{user.name}</p>
             <p className="text-sm" style={{ color: '#36454F' }}>
               {user.email}
             </p>
@@ -85,7 +93,7 @@ export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
           </Button>
           <Button
             variant="ghost"
-            className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive w-full justify-start gap-2"
             onClick={onLogOut}
           >
             <LogOut className="h-4 w-4" />
