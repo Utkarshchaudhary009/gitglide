@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useSourcesStore } from '@/stores/use-sources-store'
-import { useSessionStore } from '@/stores/use-session-store'
 import { cn } from '@/lib/utils'
 import {
   Sidebar,
@@ -25,12 +24,10 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar'
 import {
@@ -39,7 +36,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
 
 const navItems = [
   { title: 'Home', icon: Home, href: '/app' },
@@ -117,68 +113,6 @@ function SidebarNav() {
   )
 }
 
-function SessionsSection() {
-  const { state } = useSidebar()
-  const isCollapsed = state === 'collapsed'
-  const { sessions, fetchSessions, isLoading } = useSessionStore()
-
-  React.useEffect(() => {
-    fetchSessions()
-  }, [fetchSessions])
-
-  if (isCollapsed) {
-    return (
-      <SidebarGroup>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center justify-center p-2">
-              <ListTodo className="text-muted-foreground h-4 w-4" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="right">Sessions</TooltipContent>
-        </Tooltip>
-      </SidebarGroup>
-    )
-  }
-
-  const recentSessions = sessions.slice(0, 5)
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="flex items-center justify-between">
-        <span>Sessions</span>
-        {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-      </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <ScrollArea className="h-[120px]">
-          <SidebarMenu>
-            {recentSessions.length === 0 ? (
-              <div className="text-muted-foreground px-2 py-1 text-xs">
-                No sessions yet
-              </div>
-            ) : (
-              recentSessions.map((session) => (
-                <SidebarMenuItem key={session.id}>
-                  <SidebarMenuButton asChild size="sm" className="text-xs">
-                    <Link href={`/app/sessions/${session.id}`}>
-                      <span className="truncate">
-                        {session.title || session.prompt.slice(0, 30)}
-                      </span>
-                      <Badge variant="outline" className="ml-auto text-[10px]">
-                        {session.state.slice(0, 8)}
-                      </Badge>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))
-            )}
-          </SidebarMenu>
-        </ScrollArea>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  )
-}
-
 function RepositoriesSection() {
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
@@ -243,15 +177,11 @@ function RepositoriesSection() {
 
 function AppSidebarContent() {
   return (
-    <Sidebar collapsible="icon" className="border-r">
-      <SidebarHeader className="p-2">
-        <SidebarTrigger className="h-8 w-8" />
-      </SidebarHeader>
+    <Sidebar collapsible="icon" className="w-72 border-r">
       <SidebarContent>
         <SidebarNav />
       </SidebarContent>
       <SidebarFooter>
-        <SessionsSection />
         <RepositoriesSection />
       </SidebarFooter>
     </Sidebar>
