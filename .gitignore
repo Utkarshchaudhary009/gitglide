@@ -41,7 +41,7 @@ allow .env.example
 *.tsbuildinfo
 next-env.d.ts
 
-refrence
+# refrence
 .vercel
 .env*.local
 .claude/settings.local.json
