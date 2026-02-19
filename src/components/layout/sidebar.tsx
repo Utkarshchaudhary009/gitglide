@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useSourcesStore } from '@/stores/use-sources-store'
 import { useEffect, useState, useRef, useCallback } from 'react'
+import Image from 'next/image'
 
 // This is sample data.
 const data = {
@@ -112,17 +113,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
+                <div className="relative flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
+                  <Image
+                    src="/gitglide-logo.png"
+                    alt="GitGlide"
+                    width={32}
+                    height={32}
+                    priority
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate font-semibold">GitGlide</span>
-                  <span className="truncate text-xs">Autonomous Agent</span>
+                  <span className="truncate font-bold">GitGlide</span>
+                  <span className="truncate text-xs opacity-70">AI Agent</span>
                 </div>
               </Link>
             </SidebarMenuButton>

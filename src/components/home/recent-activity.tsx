@@ -117,25 +117,25 @@ export function RecentActivity() {
   function renderSessionList(sessions: DisplaySession[]) {
     if (isLoading) {
       return (
-        <div className="text-muted-foreground py-8 text-center">
-          Loading activity...
+        <div className="text-muted-foreground py-12 text-center">
+          <div className="inline-block">Loading activity...</div>
         </div>
       )
     }
     if (error) {
-      return <div className="py-8 text-center text-red-500">{error}</div>
+      return <div className="py-12 text-center text-red-400">{error}</div>
     }
     if (sessions.length === 0) {
       return (
-        <div className="text-muted-foreground py-8 text-center">
-          No recent activity
+        <div className="text-muted-foreground py-12 text-center">
+          No recent activity yet. Create a new task to get started.
         </div>
       )
     }
     return (
       <div>
-        <h3 className="text-muted-foreground mb-4 text-sm font-medium">
-          Recent
+        <h3 className="text-muted-foreground mb-4 text-sm font-semibold uppercase tracking-wide">
+          Recent Tasks
         </h3>
         <div className="space-y-2">
           {sessions.map((session) => (
@@ -152,13 +152,13 @@ function TaskCard({ session }: { session: DisplaySession }) {
     session.state === 'IN_PROGRESS' || session.state === 'RUNNING'
   return (
     <Link href={`/sessions/${session.id}`}>
-      <div className="group border-border/40 bg-card/40 hover:bg-card/60 hover:border-border/80 flex items-center justify-between rounded-xl border p-4 transition-all">
+      <div className="group border-border/30 bg-card/50 hover:bg-card/70 hover:border-accent/40 flex items-center justify-between rounded-xl border p-4 transition-all duration-200 hover:shadow-lg hover:shadow-accent/5">
         <div className="flex items-center gap-4">
           <div
-            className={`h-2 w-2 rounded-full ${isRunning ? 'animate-pulse bg-green-500' : 'bg-yellow-500'}`}
+            className={`h-3 w-3 rounded-full ${isRunning ? 'animate-pulse bg-green-500 shadow-lg shadow-green-500/50' : 'bg-yellow-500 shadow-lg shadow-yellow-500/50'}`}
           />
           <div>
-            <h4 className="text-sm font-medium">{session.title}</h4>
+            <h4 className="text-sm font-semibold">{session.title}</h4>
             <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
               <span>{session.repo}</span>
               <span>•</span>
@@ -169,7 +169,7 @@ function TaskCard({ session }: { session: DisplaySession }) {
         <div>
           <Badge
             variant={isRunning ? 'default' : 'secondary'}
-            className={`${isRunning ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-yellow-500/10 text-yellow-500'}`}
+            className={`${isRunning ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'}`}
           >
             {session.state}
           </Badge>
