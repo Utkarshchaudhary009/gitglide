@@ -10,9 +10,12 @@ import {
   Plug,
   Rocket,
   Settings,
-  FolderGit2,
   GitBranch,
   Loader2,
+  Search,
+  X,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useSourcesStore } from '@/stores/use-sources-store'
@@ -23,7 +26,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -35,7 +37,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 
 const navItems = [
   { title: 'Home', icon: Home, href: '/app' },
@@ -114,22 +122,39 @@ function SidebarNav() {
 }
 
 function RepositoriesSection() {
-  const { state } = useSidebar()
+  const { state, toggleSidebar } = useSidebar()
   const isCollapsed = state === 'collapsed'
   const { sources, fetchSources, isLoading } = useSourcesStore()
+  const [reposOpen, setReposOpen] = React.useState(true)
+  const [searchQuery, setSearchQuery] = React.useState('')
+  const pathname = usePathname()
 
   React.useEffect(() => {
     fetchSources()
   }, [fetchSources])
+
+  const filteredSources = sources.filter((source) => {
+    const fullName = `${source.githubRepo.owner}/${source.githubRepo.repo}`
+    return fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  })
 
   if (isCollapsed) {
     return (
       <SidebarGroup>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="flex items-center justify-center p-2">
-              <FolderGit2 className="text-muted-foreground h-4 w-4" />
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                toggleSidebar()
+                setReposOpen(true)
+              }}
+              className="text-muted-foreground hover:bg-accent hover:text-foreground mx-auto flex h-9 w-9 items-center justify-center rounded-lg md:h-8 md:w-8"
+            >
+              <GitBranch className="h-5 w-5" />
+              <span className="sr-only">Repositories</span>
+            </Button>
           </TooltipTrigger>
           <TooltipContent side="right">Repositories</TooltipContent>
         </Tooltip>
@@ -137,47 +162,101 @@ function RepositoriesSection() {
     )
   }
 
-  const recentSources = sources.slice(0, 5)
-
   return (
     <SidebarGroup>
-      <SidebarGroupLabel className="flex items-center justify-between">
-        <span>Repositories</span>
-        {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-      </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <ScrollArea className="h-[120px]">
-          <SidebarMenu>
-            {recentSources.length === 0 ? (
-              <div className="text-muted-foreground px-2 py-1 text-xs">
-                No repositories found
-              </div>
+      <Collapsible open={reposOpen} onOpenChange={setReposOpen}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground h-8 w-full justify-between px-2 text-xs"
+          >
+            <span className="flex items-center gap-2">
+              <GitBranch className="h-3.5 w-3.5" />
+              Repositories
+            </span>
+            {reposOpen ? (
+              <ChevronDown className="h-3 w-3" />
             ) : (
-              recentSources.map((source) => (
-                <SidebarMenuItem key={source.id}>
-                  <SidebarMenuButton asChild size="sm" className="text-xs">
-                    <Link
-                      href={`/app/repos/${source.githubRepo.owner}/${source.githubRepo.repo}`}
+              <ChevronRight className="h-3 w-3" />
+            )}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-2 pt-2">
+          {(sources.length > 0 || searchQuery) && (
+            <div className="relative">
+              <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-3 w-3 -translate-y-1/2" />
+              <Input
+                type="text"
+                placeholder="Search repos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-7 pr-7 pl-7 text-xs"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="max-h-48 space-y-1 overflow-y-auto">
+            {isLoading && sources.length === 0 ? (
+              <div className="text-muted-foreground flex items-center justify-center gap-2 py-3 text-xs">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading...
+              </div>
+            ) : filteredSources.length === 0 ? (
+              <p className="text-muted-foreground py-2 text-center text-xs">
+                {searchQuery
+                  ? `No repos match "${searchQuery}"`
+                  : 'No repositories found'}
+              </p>
+            ) : (
+              filteredSources.map((source) => {
+                const repoPath = `/app/repos/${source.githubRepo.owner}/${source.githubRepo.repo}`
+                const isActive = pathname === repoPath
+
+                return (
+                  <Link key={source.id} href={repoPath}>
+                    <div
+                      className={cn(
+                        'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors',
+                        isActive
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                      )}
                     >
-                      <GitBranch className="h-3 w-3" />
+                      <GitBranch className="h-3 w-3 flex-shrink-0" />
                       <span className="truncate">
                         {source.githubRepo.owner}/{source.githubRepo.repo}
                       </span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))
+                    </div>
+                  </Link>
+                )
+              })
             )}
-          </SidebarMenu>
-        </ScrollArea>
-      </SidebarGroupContent>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </SidebarGroup>
   )
 }
 
-function AppSidebarContent() {
+interface AppSidebarContentProps {
+  isMobile: boolean
+}
+
+function AppSidebarContent({ isMobile }: AppSidebarContentProps) {
   return (
-    <Sidebar collapsible="icon" className="w-72 border-r">
+    <Sidebar
+      collapsible={isMobile ? 'offcanvas' : 'icon'}
+      className="w-72 border-r"
+    >
       <SidebarContent>
         <SidebarNav />
       </SidebarContent>
@@ -197,7 +276,7 @@ export function AppSidebar({ children }: AppSidebarProps) {
 
   return (
     <SidebarProvider defaultOpen={isMobile}>
-      <AppSidebarContent />
+      <AppSidebarContent isMobile={isMobile} />
       <main className="flex-1 overflow-auto">{children}</main>
     </SidebarProvider>
   )
