@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "bun --bun next dev",
     "safe": "bun run type-check && bun run lint",
-    "build": "bun run safe && bun --bun next build",
+    "build": "bun run safe && bun next build",
     "start": "bun --bun next start",
     "lint": "bun --bun eslint",
     "format": "bun prettier --write .",
