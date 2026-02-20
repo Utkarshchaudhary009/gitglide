@@ -24,10 +24,16 @@ export async function GET() {
     const token = decrypt(settings.vercelToken)
     const response = await fetch('https://api.vercel.com/v2/user', {
       headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(10_000),
     })
 
     if (!response.ok) {
       // Token invalid or expired
+      await prisma.userSettings.update({
+        where: { clerkUserId: userId },
+        data: { vercelToken: null },
+      })
+      console.log('Cleared invalid Vercel token')
       return NextResponse.json({
         connected: false,
         provider: 'vercel',
@@ -41,8 +47,8 @@ export async function GET() {
       username: data.user.username,
       connectedAt: settings.updatedAt, // Using last update time as proxy
     })
-  } catch (error) {
-    console.error('Vercel status check failed:', error)
+  } catch {
+    console.error('Vercel status check failed')
     return NextResponse.json({
       connected: false,
       provider: 'vercel',

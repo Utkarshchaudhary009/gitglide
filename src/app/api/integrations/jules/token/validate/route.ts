@@ -1,12 +1,29 @@
-function createStreamMessage(type: string, data: Record<string, unknown>): string {
-  return JSON.stringify({ type, ...data }) + '\n'
-}
+import { auth } from '@clerk/nextjs/server'
+import { createStreamMessage } from '@/lib/integrations/stream'
 
 export async function POST(req: Request) {
-  const { token } = await req.json()
-  
+  const { userId } = await auth()
+  if (!userId) {
+    return new Response(createStreamMessage('error', { error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/x-ndjson' },
+    })
+  }
+
+  let token: string;
+  try {
+    const body = await req.json()
+    token = body.token
+  } catch {
+    return new Response(createStreamMessage('error', { error: 'Invalid JSON' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/x-ndjson' },
+    })
+  }
+
   if (!token) {
     return new Response(createStreamMessage('error', { error: 'API Key is required' }), {
+      status: 400,
       headers: { 'Content-Type': 'application/x-ndjson' },
     })
   }
@@ -18,7 +35,7 @@ export async function POST(req: Request) {
       try {
         send(createStreamMessage('progress', { message: 'Connecting to Jules...' }))
 
-        const response = await fetch('https://jules.google.com/api/v1/user', {
+        const response = await fetch('https://julius.googleapis.com/v1alpha/sessions', {
           headers: { 'X-Goog-Api-Key': token },
         })
 
@@ -27,7 +44,7 @@ export async function POST(req: Request) {
         }
 
         const data = await response.json()
-        const username = data.username
+        const username = data.username || data.user || data.name || 'there'
 
         send(createStreamMessage('progress', { message: `Hi ${username}! Verifying your API key...` }))
 

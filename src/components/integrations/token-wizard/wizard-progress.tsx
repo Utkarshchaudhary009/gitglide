@@ -14,11 +14,9 @@ export function WizardProgress({ steps, currentStep }: WizardProgressProps) {
           <div
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium',
-              index < currentStep
+              index <= currentStep
                 ? 'bg-primary text-primary-foreground'
-                : index === currentStep
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground',
+                : 'bg-muted text-muted-foreground',
             )}
           >
             {index < currentStep ? <Check className="h-4 w-4" /> : index + 1}

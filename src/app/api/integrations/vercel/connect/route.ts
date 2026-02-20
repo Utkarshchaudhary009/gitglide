@@ -9,7 +9,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { token } = await req.json()
+  let token: string;
+  try {
+    const body = await req.json()
+    token = body.token
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
   if (!token) {
     return NextResponse.json({ error: 'Token is required' }, { status: 400 })
   }
@@ -36,8 +43,8 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ success: true, username })
-  } catch (error) {
-    console.error('Vercel connect failed:', error)
+  } catch {
+    console.error('Vercel connect failed')
     return NextResponse.json({ error: 'Failed to connect' }, { status: 500 })
   }
 }

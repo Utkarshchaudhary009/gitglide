@@ -39,8 +39,9 @@ export async function POST(
   const paramResult = ParamsSchema.safeParse({ id })
 
   if (!paramResult.success) {
+    console.error('Invalid Session ID Validation Error:', paramResult.error.format())
     return NextResponse.json(
-      { error: 'Invalid Session ID', details: paramResult.error.format() },
+      { error: 'Invalid Session ID' },
       { status: 400 }
     )
   }
@@ -56,8 +57,9 @@ export async function POST(
   const result = MessageSchema.safeParse(body)
 
   if (!result.success) {
+    console.error('Validation Error for Message:', result.error.format())
     return NextResponse.json(
-      { error: 'Validation Error', details: result.error.format() },
+      { error: 'Validation Error' },
       { status: 400 }
     )
   }
@@ -82,8 +84,7 @@ export async function POST(
 
     if (!response.ok) {
       // Log the full error for debugging but return a generic message unless it's a known safe error
-      const errorText = await response.text()
-      console.error(`Jules API Error [${response.status}]:`, errorText)
+      console.error('Jules API Error: upstream service returned an error')
 
       return NextResponse.json(
         { error: 'Failed to process message with upstream service.' },
@@ -94,8 +95,8 @@ export async function POST(
     const data = await response.json().catch(() => ({}))
     return NextResponse.json(data)
 
-  } catch (error) {
-    console.error('Internal Server Error processing message:', error)
+  } catch {
+    console.error('Internal Server Error processing message')
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

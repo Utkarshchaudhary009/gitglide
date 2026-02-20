@@ -18,8 +18,8 @@ export async function DELETE() {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Vercel disconnect failed:', error)
+  } catch {
+    console.error('Vercel disconnect failed')
     return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 })
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { ConnectionCard } from '@/components/integrations/connection-card'
 import type { IntegrationProvider, ConnectionInfo } from '@/lib/integrations/types'
 import { availableProviders } from '@/lib/integrations/metadata'
@@ -8,7 +8,7 @@ import { availableProviders } from '@/lib/integrations/metadata'
 export function IntegrationsList() {
   const [connections, setConnections] = useState<Record<string, ConnectionInfo | null>>({})
 
-  const fetchStatus = async (provider: IntegrationProvider) => {
+  const fetchStatus = useCallback(async (provider: IntegrationProvider) => {
     try {
       const res = await fetch(`/api/integrations/${provider}/status`)
       if (res.ok) {
@@ -16,20 +16,20 @@ export function IntegrationsList() {
         setConnections((prev) => ({ ...prev, [provider]: data }))
       }
     } catch (error) {
-      console.error(`Failed to fetch status for ${provider}`, error)
+      console.error('Failed to fetch status for provider:', provider, error)
     }
-  }
+  }, [])
 
   useEffect(() => {
     availableProviders.forEach((p) => fetchStatus(p.id))
-  }, [])
+  }, [fetchStatus])
 
   const handleDisconnect = async (provider: IntegrationProvider) => {
     try {
       await fetch(`/api/integrations/${provider}/disconnect`, { method: 'DELETE' })
       fetchStatus(provider)
     } catch (error) {
-      console.error(`Failed to disconnect ${provider}`, error)
+      console.error('Failed to disconnect provider:', provider, error)
     }
   }
 

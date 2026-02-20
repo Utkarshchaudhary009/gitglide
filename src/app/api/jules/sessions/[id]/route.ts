@@ -42,15 +42,14 @@ export async function GET(
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Jules API GET Error [${response.status}]:`, errorText)
+      console.error('Jules API GET request failed')
       return NextResponse.json({ error: 'Failed to fetch session' }, { status: response.status })
     }
 
     const data = await response.json()
     return NextResponse.json(data)
-  } catch (error) {
-    console.error(`Failed to fetch session ${id}:`, error)
+  } catch {
+    console.error('Jules session GET handler failed')
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -85,7 +84,7 @@ export async function PATCH(
   // Validate body is an object
   const bodyResult = PatchBodySchema.safeParse(body)
   if (!bodyResult.success) {
-     return NextResponse.json({ error: 'Body must be a JSON object' }, { status: 400 })
+    return NextResponse.json({ error: 'Body must be a JSON object' }, { status: 400 })
   }
 
   try {
@@ -96,19 +95,18 @@ export async function PATCH(
         'x-goog-api-key': JULES_API_KEY!,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(bodyResult.data),
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Jules API PATCH Error [${response.status}]:`, errorText)
+      console.error('Jules API PATCH request failed')
       return NextResponse.json({ error: 'Failed to update session' }, { status: response.status })
     }
 
     const data = await response.json()
     return NextResponse.json(data)
-  } catch (error) {
-    console.error(`Failed to update session ${id}:`, error)
+  } catch {
+    console.error('Jules session PATCH handler failed')
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -144,14 +142,13 @@ export async function DELETE(
     })
 
     if (!response.ok) {
-       const errorText = await response.text()
-      console.error(`Jules API DELETE Error [${response.status}]:`, errorText)
+      console.error('Jules API DELETE request failed')
       return NextResponse.json({ error: 'Failed to delete session' }, { status: response.status })
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error(`Failed to delete session ${id}:`, error)
+  } catch {
+    console.error('Jules session DELETE handler failed')
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

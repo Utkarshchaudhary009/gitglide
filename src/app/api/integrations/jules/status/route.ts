@@ -24,9 +24,15 @@ export async function GET() {
     const token = decrypt(settings.julesApiKey)
     const response = await fetch('https://jules.google.com/api/v1/user', {
       headers: { 'X-Goog-Api-Key': token },
+      signal: AbortSignal.timeout(10_000),
     })
 
     if (!response.ok) {
+      await prisma.userSettings.update({
+        where: { clerkUserId: userId },
+        data: { julesApiKey: null },
+      })
+      console.log('Cleared invalid Jules token')
       return NextResponse.json({
         connected: false,
         provider: 'jules',
@@ -40,8 +46,8 @@ export async function GET() {
       username: data.username,
       connectedAt: settings.updatedAt,
     })
-  } catch (error) {
-    console.error('Jules status check failed:', error)
+  } catch {
+    console.error('Jules status check failed')
     return NextResponse.json({
       connected: false,
       provider: 'jules',

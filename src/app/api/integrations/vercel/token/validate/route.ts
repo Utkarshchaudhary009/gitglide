@@ -1,18 +1,26 @@
+import { createStreamMessage } from '@/lib/integrations/stream'
+
 interface VercelTeam {
   id: string
   name: string
   slug: string
 }
 
-function createStreamMessage(type: string, data: Record<string, unknown>): string {
-  return JSON.stringify({ type, ...data }) + '\n'
-}
-
 export async function POST(req: Request) {
-  const { token } = await req.json()
-  
+  let token: string;
+  try {
+    const body = await req.json()
+    token = body.token
+  } catch {
+    return new Response(createStreamMessage('error', { error: 'Invalid JSON' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/x-ndjson' },
+    })
+  }
+
   if (!token) {
     return new Response(createStreamMessage('error', { error: 'Token is required' }), {
+      status: 400,
       headers: { 'Content-Type': 'application/x-ndjson' },
     })
   }
@@ -41,7 +49,7 @@ export async function POST(req: Request) {
         const teamsRes = await fetch('https://api.vercel.com/v2/teams', {
           headers: { Authorization: `Bearer ${token}` },
         })
-        
+
         let teams: VercelTeam[] = []
         if (teamsRes.ok) {
           const teamsData = await teamsRes.json()

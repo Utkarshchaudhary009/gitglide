@@ -3,13 +3,8 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, CheckCircle2, AlertCircle, Loader2, User, Users } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import type { IntegrationProvider } from '@/lib/integrations/types'
+import type { IntegrationProvider, Team } from '@/lib/integrations/types'
 
-interface Team {
-  id: string
-  name: string
-  slug: string
-}
 
 interface StepPasteTokenProps {
   provider: IntegrationProvider
@@ -125,9 +120,9 @@ export function StepPasteToken({
               <p className="text-xs text-muted-foreground">Projects and deployments will be scoped to this selection.</p>
             </div>
           ) : (
-             <div className="bg-muted p-4 rounded-lg text-center">
-               <p className="text-sm text-muted-foreground">Token verified successfully. You are ready to connect.</p>
-             </div>
+            <div className="bg-muted p-4 rounded-lg text-center">
+              <p className="text-sm text-muted-foreground">Token verified successfully. You are ready to connect.</p>
+            </div>
           )}
         </div>
       )}
@@ -151,7 +146,7 @@ export function StepPasteToken({
             )}
           </Button>
         ) : (
-          <Button onClick={onFinalConnect} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button onClick={onFinalConnect} disabled={loading} variant="success">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

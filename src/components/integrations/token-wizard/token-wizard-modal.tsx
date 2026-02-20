@@ -7,7 +7,7 @@ import { StepIntroduction } from './step-introduction'
 import { StepCreateToken } from './step-create-token'
 import { StepPasteToken } from './step-paste-token'
 import { StepVerify } from './step-verify'
-import type { IntegrationProvider } from '@/lib/integrations/types'
+import type { IntegrationProvider, Team, StreamMessage } from '@/lib/integrations/types'
 
 interface TokenWizardModalProps {
   open: boolean
@@ -18,21 +18,6 @@ interface TokenWizardModalProps {
 
 const STEPS = ['Intro', 'Create', 'Connect', 'Done']
 
-interface Team {
-  id: string
-  name: string
-  slug: string
-}
-
-interface StreamMessage {
-  type: string
-  message?: string
-  valid?: boolean
-  username?: string
-  projectCount?: number
-  error?: string
-  teams?: Team[]
-}
 
 async function readStreamResponse(
   response: Response,
@@ -64,6 +49,18 @@ async function readStreamResponse(
       } catch {
         // Skip malformed JSON
       }
+    }
+  }
+
+  if (buffer.trim()) {
+    try {
+      const message = JSON.parse(buffer.trim()) as StreamMessage
+      lastMessage = message
+      if (message.type === 'progress' && message.message) {
+        onProgress(message.message)
+      }
+    } catch {
+      // Skip malformed JSON
     }
   }
 
@@ -134,6 +131,12 @@ export function TokenWizardModal({ open, onOpenChange, provider, onSuccess }: To
           teamSlug: selectedTeamSlug,
         }),
       })
+
+      if (!saveRes.ok) {
+        setError(`Failed to connect: ${saveRes.statusText || 'Unknown error'}`)
+        return
+      }
+
       const saveData = await saveRes.json()
 
       if (!saveData.success) {
@@ -150,8 +153,7 @@ export function TokenWizardModal({ open, onOpenChange, provider, onSuccess }: To
     }
   }
 
-  const handleDone = () => {
-    onOpenChange(false)
+  const resetState = () => {
     setCurrentStep(0)
     setToken('')
     setUsername(null)
@@ -163,10 +165,22 @@ export function TokenWizardModal({ open, onOpenChange, provider, onSuccess }: To
     setSelectedTeamSlug(null)
   }
 
+  const handleDone = () => {
+    onOpenChange(false)
+    resetState()
+  }
+
+  const handleOpenChange = (isOpen: boolean) => {
+    onOpenChange(isOpen)
+    if (!isOpen) {
+      resetState()
+    }
+  }
+
   const providerName = provider.charAt(0).toUpperCase() + provider.slice(1)
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="!max-w-[calc(100vw-2rem)] sm:!max-w-[90vw] md:!max-w-[800px] lg:!max-w-[900px] max-h-[95vh] overflow-y-auto p-4 sm:p-6 lg:p-8">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-lg sm:text-xl lg:text-2xl">Connect to {providerName}</DialogTitle>
