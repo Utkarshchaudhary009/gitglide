@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ExternalLink, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from '@/components/user/user-menu'
-import { SidebarTrigger } from '@/components/ui/sidebar'
+import { useSidebarStore } from '@/stores/use-sidebar-store'
 import {
   Tooltip,
   TooltipContent,
@@ -31,36 +31,51 @@ export function Header({
   onApiKeys,
   onLogOut,
 }: HeaderProps) {
-  return (
-    <header className="border-border bg-background flex h-14 items-center justify-between border-b px-4">
-      <div className="flex items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <SidebarTrigger className="h-8 w-8" />
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <p>Toggle sidebar (Ctrl+B)</p>
-          </TooltipContent>
-        </Tooltip>
+  const { toggle } = useSidebarStore()
 
-        <div className="flex items-center gap-1 text-sm">
-          <Button variant="ghost" size="sm" className="h-8 px-2 font-normal">
-            {organization}
-          </Button>
-          <span className="text-muted-foreground">/</span>
-          <Button variant="ghost" size="sm" className="h-8 px-2 font-normal">
-            {repository}
-          </Button>
-          <Link
-            href="#"
-            className="text-muted-foreground hover:text-foreground ml-1"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Link>
+  return (
+    <div className="px-3 pt-0.5 md:pt-3 pb-1.5 md:pb-4 overflow-visible">
+      <div className="flex items-center justify-between gap-2 h-8 min-w-0">
+        {/* Left side - Menu Button and Breadcrumbs */}
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={toggle}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 flex-shrink-0"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Toggle sidebar (Ctrl+B)</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="flex items-center gap-1 text-sm">
+            <Button variant="ghost" size="sm" className="h-8 px-2 font-normal">
+              {organization}
+            </Button>
+            <span className="text-muted-foreground">/</span>
+            <Button variant="ghost" size="sm" className="h-8 px-2 font-normal">
+              {repository}
+            </Button>
+            <Link
+              href="#"
+              className="text-muted-foreground hover:text-foreground ml-1"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Right side - User */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <UserMenu user={user} onApiKeys={onApiKeys} onLogOut={onLogOut} />
         </div>
       </div>
-
-      <UserMenu user={user} onApiKeys={onApiKeys} onLogOut={onLogOut} />
-    </header>
+    </div>
   )
 }
