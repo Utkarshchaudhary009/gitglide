@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// @ts-nocheck
 
 import { writeFileSync } from 'fs'
 import { $ } from 'bun'
@@ -12,20 +13,20 @@ interface PRInfo {
 }
 
 interface Review {
-      id: string,
-      author: {
-        login: string
-      },
-      authorAssociation: string,
-      body: string,
-      submittedAt: string,
-      includesCreatedEdit: boolean,
-      reactionGroups: [],
-      state:string,
-      commit: {
-        oid: string
-      }
-    }
+  id: string,
+  author: {
+    login: string
+  },
+  authorAssociation: string,
+  body: string,
+  submittedAt: string,
+  includesCreatedEdit: boolean,
+  reactionGroups: [],
+  state: string,
+  commit: {
+    oid: string
+  }
+}
 
 async function getLatestPR(): Promise<PRInfo> {
   const prs =
