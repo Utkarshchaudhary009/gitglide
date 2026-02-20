@@ -22,8 +22,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const response = await fetch('https://jules.google.com/api/v1/user', {
-      headers: { 'X-Goog-Api-Key': token },
+    const response = await fetch('https://jules.googleapis.com/v1alpha/sessions', {
+      headers: { 'x-goog-api-key': token },
       signal: AbortSignal.timeout(10_000),
     })
 
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const data = await response.json()
-    const username = data.username
+    const username = data.username || data.user || data.name || 'there'
 
     await prisma.userSettings.upsert({
       where: { clerkUserId: userId },
