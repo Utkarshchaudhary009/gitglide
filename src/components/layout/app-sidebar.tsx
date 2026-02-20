@@ -23,7 +23,6 @@ import { cn } from '@/lib/utils'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -223,16 +222,11 @@ interface AppSidebarContentProps {
 
 function AppSidebarContent({ isMobile }: AppSidebarContentProps) {
   return (
-    <Sidebar
-      collapsible={isMobile ? 'offcanvas' : 'icon'}
-      className="w-72 border-r"
-    >
+    <Sidebar collapsible={isMobile ? 'offcanvas' : 'icon'} className="border-r">
       <SidebarContent>
         <SidebarNav />
-      </SidebarContent>
-      <SidebarFooter>
         <RepositoriesSection />
-      </SidebarFooter>
+      </SidebarContent>
     </Sidebar>
   )
 }
