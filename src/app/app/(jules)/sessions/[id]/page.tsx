@@ -48,7 +48,9 @@ export default function SessionDetailPage() {
 
   useEffect(() => {
     if (id) {
-      fetchData()
+      const frame = requestAnimationFrame(() => {
+        fetchData()
+      })
       // Poll for updates every 5 seconds
       const interval = setInterval(fetchData, 5000)
 
@@ -61,6 +63,7 @@ export default function SessionDetailPage() {
       document.addEventListener('visibilitychange', handleVisibilityChange)
 
       return () => {
+        cancelAnimationFrame(frame)
         clearInterval(interval)
         document.removeEventListener('visibilitychange', handleVisibilityChange)
       }

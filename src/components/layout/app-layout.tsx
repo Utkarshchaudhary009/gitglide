@@ -45,17 +45,6 @@ function SidebarLoader({ width }: { width: number }) {
   )
 }
 
-function subscribeToMount(callback: () => void) {
-  return () => { }
-}
-
-function getMountSnapshot() {
-  return true
-}
-
-function getMountServerSnapshot() {
-  return false
-}
 
 function subscribeToDesktop(callback: () => void) {
   window.addEventListener('resize', callback)
@@ -80,7 +69,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [hasMounted, setHasMounted] = useState(false)
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
   useEffect(() => {
-    setHasMounted(true)
+    const frame = requestAnimationFrame(() => {
+      setHasMounted(true)
+    })
+    return () => cancelAnimationFrame(frame)
   }, [])
   const isDesktop = useSyncExternalStore(
     subscribeToDesktop,

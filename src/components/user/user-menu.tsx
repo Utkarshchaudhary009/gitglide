@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import { LogOut, Key, Palette, Sun, Moon, Monitor, Check } from 'lucide-react'
+import { LogOut, Key, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Popover,
