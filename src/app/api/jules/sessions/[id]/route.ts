@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  JULES_API_KEY,
-  JULES_API_URL,
-  validateJulesRequest,
-} from '@/lib/jules-server'
+import { JULES_API_URL, validateJulesRequest } from '@/lib/jules-server'
 import { z } from 'zod'
 
 // Define validation schemas
@@ -19,8 +15,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const validationError = await validateJulesRequest()
-  if (validationError) return validationError
+  const validation = await validateJulesRequest()
+  if (validation instanceof NextResponse) return validation
+  const { key } = validation
 
   const { id } = await params
   const paramResult = ParamsSchema.safeParse({ id })
@@ -36,14 +33,17 @@ export async function GET(
     const safeId = encodeURIComponent(paramResult.data.id)
     const response = await fetch(`${JULES_API_URL}/sessions/${safeId}`, {
       headers: {
-        'x-goog-api-key': JULES_API_KEY!,
+        'x-goog-api-key': key,
         'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
       console.error('Jules API GET request failed')
-      return NextResponse.json({ error: 'Failed to fetch session' }, { status: response.status })
+      return NextResponse.json(
+        { error: 'Failed to fetch session' },
+        { status: response.status }
+      )
     }
 
     const data = await response.json()
@@ -61,8 +61,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const validationError = await validateJulesRequest()
-  if (validationError) return validationError
+  const validation = await validateJulesRequest()
+  if (validation instanceof NextResponse) return validation
+  const { key } = validation
 
   const { id } = await params
   const paramResult = ParamsSchema.safeParse({ id })
@@ -84,7 +85,10 @@ export async function PATCH(
   // Validate body is an object
   const bodyResult = PatchBodySchema.safeParse(body)
   if (!bodyResult.success) {
-    return NextResponse.json({ error: 'Body must be a JSON object' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Body must be a JSON object' },
+      { status: 400 }
+    )
   }
 
   try {
@@ -92,7 +96,7 @@ export async function PATCH(
     const response = await fetch(`${JULES_API_URL}/sessions/${safeId}`, {
       method: 'PATCH',
       headers: {
-        'x-goog-api-key': JULES_API_KEY!,
+        'x-goog-api-key': key,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(bodyResult.data),
@@ -100,7 +104,10 @@ export async function PATCH(
 
     if (!response.ok) {
       console.error('Jules API PATCH request failed')
-      return NextResponse.json({ error: 'Failed to update session' }, { status: response.status })
+      return NextResponse.json(
+        { error: 'Failed to update session' },
+        { status: response.status }
+      )
     }
 
     const data = await response.json()
@@ -118,8 +125,9 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const validationError = await validateJulesRequest()
-  if (validationError) return validationError
+  const validation = await validateJulesRequest()
+  if (validation instanceof NextResponse) return validation
+  const { key } = validation
 
   const { id } = await params
   const paramResult = ParamsSchema.safeParse({ id })
@@ -136,14 +144,17 @@ export async function DELETE(
     const response = await fetch(`${JULES_API_URL}/sessions/${safeId}`, {
       method: 'DELETE',
       headers: {
-        'x-goog-api-key': JULES_API_KEY!,
+        'x-goog-api-key': key,
         'Content-Type': 'application/json',
       },
     })
 
     if (!response.ok) {
       console.error('Jules API DELETE request failed')
-      return NextResponse.json({ error: 'Failed to delete session' }, { status: response.status })
+      return NextResponse.json(
+        { error: 'Failed to delete session' },
+        { status: response.status }
+      )
     }
 
     return NextResponse.json({ success: true })

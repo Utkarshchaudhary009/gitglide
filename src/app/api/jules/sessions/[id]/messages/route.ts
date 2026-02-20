@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  JULES_API_URL,
-  JULES_API_KEY,
-  validateJulesRequest,
-} from '@/lib/jules-server'
+import { JULES_API_URL, validateJulesRequest } from '@/lib/jules-server'
 import { z } from 'zod'
 
 // Define input schema for request body
 // Strict validation prevents injection and ensures data integrity
-const MessageSchema = z.object({
-  prompt: z.string().optional(),
-  message: z.string().optional(),
-}).refine(data => data.prompt || data.message, {
-  message: "Either 'prompt' or 'message' is required",
-  path: ["prompt"],
-}).transform((data) => ({
-  prompt: data.prompt || data.message || '',
-}))
+const MessageSchema = z
+  .object({
+    prompt: z.string().optional(),
+    message: z.string().optional(),
+  })
+  .refine((data) => data.prompt || data.message, {
+    message: "Either 'prompt' or 'message' is required",
+    path: ['prompt'],
+  })
+  .transform((data) => ({
+    prompt: data.prompt || data.message || '',
+  }))
 
 // Define param validation schema
 // Restricts ID format to prevent path traversal or injection
@@ -30,8 +29,9 @@ export async function POST(
 ) {
   // 1. Authenticate & Configure
   // Centralized check for Auth and API Key presence
-  const validationError = await validateJulesRequest()
-  if (validationError) return validationError
+  const validation = await validateJulesRequest()
+  if (validation instanceof NextResponse) return validation
+  const { key } = validation
 
   // 2. Validate Parameters
   // Next.js params are async in App Router
@@ -39,11 +39,11 @@ export async function POST(
   const paramResult = ParamsSchema.safeParse({ id })
 
   if (!paramResult.success) {
-    console.error('Invalid Session ID Validation Error:', paramResult.error.format())
-    return NextResponse.json(
-      { error: 'Invalid Session ID' },
-      { status: 400 }
+    console.error(
+      'Invalid Session ID Validation Error:',
+      paramResult.error.format()
     )
+    return NextResponse.json({ error: 'Invalid Session ID' }, { status: 400 })
   }
 
   // 3. Validate Body
@@ -58,10 +58,7 @@ export async function POST(
 
   if (!result.success) {
     console.error('Validation Error for Message:', result.error.format())
-    return NextResponse.json(
-      { error: 'Validation Error' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'Validation Error' }, { status: 400 })
   }
 
   const { prompt } = result.data
@@ -72,11 +69,10 @@ export async function POST(
     const safeId = encodeURIComponent(paramResult.data.id)
     const upstreamUrl = `${JULES_API_URL}/sessions/${safeId}:sendMessage`
 
-    // JULES_API_KEY is guaranteed to be defined here due to validateJulesRequest
     const response = await fetch(upstreamUrl, {
       method: 'POST',
       headers: {
-        'x-goog-api-key': JULES_API_KEY!,
+        'x-goog-api-key': key,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ prompt }),
@@ -94,7 +90,6 @@ export async function POST(
 
     const data = await response.json().catch(() => ({}))
     return NextResponse.json(data)
-
   } catch {
     console.error('Internal Server Error processing message')
     return NextResponse.json(
