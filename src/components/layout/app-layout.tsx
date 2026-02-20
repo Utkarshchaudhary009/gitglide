@@ -44,18 +44,29 @@ function SidebarLoader({ width }: { width: number }) {
   )
 }
 
-function getDesktopSnapshot() {
+function subscribeToMount(callback: () => void) {
+  return () => {}
+}
+
+function getMountSnapshot() {
   return true
+}
+
+function getMountServerSnapshot() {
+  return false
+}
+
+function subscribeToDesktop(callback: () => void) {
+  window.addEventListener('resize', callback)
+  return () => window.removeEventListener('resize', callback)
+}
+
+function getDesktopSnapshot() {
+  return window.innerWidth >= 1024
 }
 
 function getDesktopServerSnapshot() {
   return true
-}
-
-function subscribeToDesktop(callback: () => void) {
-  const handleResize = () => callback()
-  window.addEventListener('resize', callback)
-  return () => window.removeEventListener('resize', callback)
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -65,19 +76,22 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const { isOpen, width, toggle, setOpen, setWidth } = useSidebarStore()
   const [isResizing, setIsResizing] = useState(false)
+  const hasMounted = useSyncExternalStore(
+    subscribeToMount,
+    getMountSnapshot,
+    getMountServerSnapshot
+  )
   const isDesktop = useSyncExternalStore(
     subscribeToDesktop,
-    () => window.innerWidth >= 1024,
+    getDesktopSnapshot,
     getDesktopServerSnapshot
   )
-  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
-    setHasMounted(true)
-    if (!isDesktop) {
+    if (!isDesktop && isOpen) {
       setOpen(false)
     }
-  }, [setOpen, isDesktop])
+  }, [isDesktop, isOpen, setOpen])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
