@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server'
-
 function createStreamMessage(type: string, data: Record<string, unknown>): string {
   return JSON.stringify({ type, ...data }) + '\n'
 }
@@ -39,7 +37,7 @@ export async function POST(req: Request) {
         }))
         controller.close()
 
-      } catch (error) {
+      } catch {
         send(createStreamMessage('error', { error: 'Invalid Jules API Key' }))
         controller.close()
       }

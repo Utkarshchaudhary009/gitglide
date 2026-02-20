@@ -1,4 +1,8 @@
-import { NextResponse } from 'next/server'
+interface VercelTeam {
+  id: string
+  name: string
+  slug: string
+}
 
 function createStreamMessage(type: string, data: Record<string, unknown>): string {
   return JSON.stringify({ type, ...data }) + '\n'
@@ -38,20 +42,20 @@ export async function POST(req: Request) {
           headers: { Authorization: `Bearer ${token}` },
         })
         
-        let teams: any[] = []
+        let teams: VercelTeam[] = []
         if (teamsRes.ok) {
           const teamsData = await teamsRes.json()
-          teams = teamsData.teams || []
+          teams = (teamsData.teams || []) as VercelTeam[]
         }
 
         send(createStreamMessage('complete', {
           valid: true,
           username,
-          teams: teams.map((t: any) => ({ id: t.id, name: t.name, slug: t.slug })),
+          teams: teams.map((t) => ({ id: t.id, name: t.name, slug: t.slug })),
         }))
         controller.close()
 
-      } catch (error) {
+      } catch {
         send(createStreamMessage('error', { error: 'Invalid Vercel token' }))
         controller.close()
       }
