@@ -32,7 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-allow .env.example
+!.env.example
 
 # vercel
 .vercel
@@ -41,9 +41,9 @@ allow .env.example
 *.tsbuildinfo
 next-env.d.ts
 
-# refrence
-.vercel
+# reference
 .env*.local
 .claude/settings.local.json
 MASTER-PLAN.md
 .claude/settings.json
+review.md

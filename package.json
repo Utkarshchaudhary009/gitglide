@@ -10,10 +10,13 @@
     "lint": "bun --bun eslint",
     "format": "bun prettier --write .",
     "format:check": "bun prettier --check .",
-    "type-check": "tsc --noEmit",
+    "type-check": "bun tsc --noEmit",
     "prepare": "husky",
     "postinstall": "bun prisma generate",
-    "logs:deployment": "bash scripts/deployment-logs.sh"
+    "pr": "bun scripts/fetch-pr-review.ts",
+    "logs:deployment": "bash scripts/deployment-logs.sh",
+    "m": "ollama launch claude --model minimax-m2.5:cloud",
+    "g": "ollama launch claude --model glm-5:cloud"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
@@ -53,6 +56,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "bun-types": "latest",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

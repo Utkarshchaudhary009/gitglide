@@ -6,6 +6,8 @@ interface SourcesStore {
   isLoading: boolean
   isFetchingSource: boolean
   error: string | null
+  isConfigured: boolean
+  hasFetched: boolean
 
   nextPageToken: string | undefined
   hasMore: boolean
@@ -20,11 +22,13 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
   isLoading: false,
   isFetchingSource: false,
   error: null,
+  isConfigured: true,
+  hasFetched: false,
   nextPageToken: undefined,
   hasMore: true,
 
   resetSources: () =>
-    set({ sources: [], nextPageToken: undefined, hasMore: true }),
+    set({ sources: [], nextPageToken: undefined, hasMore: true, hasFetched: false }),
 
   fetchSources: async (pageToken?: string) => {
     // Prevent fetching if already loading or no more pages (unless initial load)
@@ -35,9 +39,24 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
     try {
       const query = new URLSearchParams()
       if (pageToken) query.set('pageToken', pageToken)
-      query.set('pageSize', '20') // Load 20 at a time
+      query.set('pageSize', '20')
 
       const response = await fetch(`/api/jules/sources?${query.toString()}`)
+      
+      if (response.status === 401) {
+        set({ isLoading: false, error: 'Not authenticated', hasFetched: true, isConfigured: true })
+        return
+      }
+      
+      if (response.status === 500) {
+        const data = await response.json()
+        if (data.error?.includes('not configured')) {
+          set({ isLoading: false, error: 'Jules not configured', hasFetched: true, isConfigured: false })
+          return
+        }
+        throw new Error(data.error || 'Server error')
+      }
+      
       if (!response.ok) throw new Error('Failed to fetch sources')
       const data = await response.json()
 
@@ -48,7 +67,6 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
         const combined: Source[] = pageToken
           ? [...state.sources, ...newSources]
           : newSources
-        // Deduplicate by ID
         const unique: Source[] = Array.from(
           new Map(combined.map((s) => [s.id, s])).values()
         )
@@ -57,10 +75,12 @@ export const useSourcesStore = create<SourcesStore>((set, get) => ({
           nextPageToken: nextToken,
           hasMore: !!nextToken,
           isLoading: false,
+          isConfigured: true,
+          hasFetched: true,
         }
       })
     } catch (error) {
-      set({ error: (error as Error).message, isLoading: false })
+      set({ error: (error as Error).message, isLoading: false, hasFetched: true })
     }
   },
 

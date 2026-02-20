@@ -1,7 +1,9 @@
 'use client'
 
 import * as React from 'react'
-import { LogOut, Key } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
+import { LogOut, Key, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Popover,
@@ -10,6 +12,7 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
 interface UserMenuProps {
   user?: {
@@ -21,17 +24,61 @@ interface UserMenuProps {
   onLogOut?: () => void
 }
 
+function ThemeSelector() {
+  const { theme, setTheme } = useTheme()
+
+  const themes = [
+    { value: 'light', icon: Sun },
+    { value: 'dark', icon: Moon },
+    { value: 'system', icon: Monitor },
+  ]
+
+  return (
+    <div className="flex items-center justify-between px-2 py-1.5">
+      <span className="text-sm font-medium">Theme</span>
+      <div className="flex items-center gap-1 rounded-lg border p-0.5">
+        {themes.map((t) => {
+          const Icon = t.icon
+          const isActive = theme === t.value
+          return (
+            <Button
+              key={t.value}
+              variant={isActive ? 'secondary' : 'ghost'}
+              size="icon"
+              className={cn(
+                'h-6 w-6 rounded-md',
+                isActive && 'bg-background shadow-sm'
+              )}
+              onClick={() => setTheme(t.value)}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span className="sr-only">{t.value}</span>
+            </Button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
-  const initials = user?.name
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'U'
+  const router = useRouter()
+  const initials =
+    user?.name
+      ?.split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || 'U'
 
   if (!user) {
     return (
-      <Button variant="outline" size="sm" className="rounded-full">
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full"
+        onClick={() => router.push('/sign-in')}
+      >
         Sign in
       </Button>
     )
@@ -67,7 +114,7 @@ export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
             </AvatarFallback>
           </Avatar>
           <div className="text-center">
-            <p className="font-medium text-foreground">{user.name}</p>
+            <p className="text-foreground font-medium">{user.name}</p>
             <p className="text-sm" style={{ color: '#36454F' }}>
               {user.email}
             </p>
@@ -83,9 +130,10 @@ export function UserMenu({ user, onApiKeys, onLogOut }: UserMenuProps) {
             <Key className="h-4 w-4" />
             API Keys
           </Button>
+          <ThemeSelector />
           <Button
             variant="ghost"
-            className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive w-full justify-start gap-2"
             onClick={onLogOut}
           >
             <LogOut className="h-4 w-4" />
