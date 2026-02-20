@@ -16,7 +16,7 @@ export const useSidebarStore = create<SidebarState>()(
   persist(
     (set, get) => ({
       isOpen: true,
-      width: DEFAULT_WIDTH,
+      width: RAIL_WIDTH,
       toggle: () => {
         const { width, isOpen } = get()
         if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
