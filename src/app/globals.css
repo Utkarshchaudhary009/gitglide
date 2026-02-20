@@ -235,6 +235,7 @@ button {
 }
 
 @keyframes pulse-subtle {
+
   0%,
   100% {
     opacity: 1;
@@ -246,6 +247,7 @@ button {
 }
 
 @keyframes bounce-subtle {
+
   0%,
   100% {
     transform: translateY(0);
@@ -320,17 +322,18 @@ button {
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }
 
-@utility hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-@utility no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
 @utility no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
