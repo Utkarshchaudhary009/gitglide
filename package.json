@@ -10,7 +10,7 @@
     "lint": "bun --bun eslint",
     "format": "bun prettier --write .",
     "format:check": "bun prettier --check .",
-    "type-check": "tsc --noEmit",
+    "type-check": "bun tsc --noEmit",
     "prepare": "husky",
     "postinstall": "bun prisma generate",
     "pr": "bun scripts/fetch-pr-review.ts",

@@ -28,7 +28,7 @@
       ]
     },
     "types": [
-      "bun"
+      "bun-types"
     ]
   },
   "include": [
