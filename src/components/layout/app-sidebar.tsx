@@ -56,7 +56,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
   const { isSignedIn } = useUser()
   const isCollapsed = width < 100
 
-  const { sources, fetchSources, isLoading, isConfigured, hasFetched, error } =
+  const { sources, fetchSources, isLoading, isConfigured, hasFetched } =
     useSourcesStore()
   const [reposOpen, setReposOpen] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState('')
@@ -86,7 +86,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
   return (
     <div
       className={cn(
-        'pb-12 h-full border-r bg-background transition-all duration-300 ease-in-out flex flex-col',
+        'bg-background flex h-full flex-col border-r pb-12 transition-all duration-300 ease-in-out',
         isCollapsed ? 'w-[60px]' : 'w-72'
       )}
       style={{ width: isCollapsed ? 60 : width }}
@@ -107,7 +107,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                           href={item.href}
                           onClick={handleLinkClick}
                           className={cn(
-                            'flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 mx-auto mb-1',
+                            'hover:text-foreground mx-auto mb-1 flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
                             isActive
                               ? 'bg-accent text-accent-foreground'
                               : 'text-muted-foreground hover:bg-accent'
@@ -129,11 +129,15 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
               }
 
               return (
-                <Link key={item.href} href={item.href} onClick={handleLinkClick}>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={handleLinkClick}
+                >
                   <Button
                     variant={isActive ? 'secondary' : 'ghost'}
                     className={cn(
-                      'w-full justify-start h-9 mb-1',
+                      'mb-1 h-9 w-full justify-start',
                       isActive && 'bg-accent'
                     )}
                   >
@@ -165,7 +169,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                     toggle()
                     setReposOpen(true)
                   }}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:h-8 md:w-8 mx-auto mt-2"
+                  className="text-muted-foreground hover:bg-accent hover:text-foreground mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-lg md:h-8 md:w-8"
                 >
                   <GitBranch className="h-5 w-5" />
                   <span className="sr-only">Repositories</span>
@@ -182,7 +186,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-between h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground h-8 w-full justify-between px-2 text-xs"
               >
                 <span className="flex items-center gap-2">
                   <GitBranch className="h-3.5 w-3.5" />
@@ -198,19 +202,23 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
             <CollapsibleContent className="space-y-2 pt-2">
               {!isSignedIn ? (
                 <Card className="border-dashed">
-                  <CardContent className="p-3 text-center text-xs text-muted-foreground">
-                    <AlertCircle className="h-4 w-4 mx-auto mb-1.5 text-muted-foreground/70" />
+                  <CardContent className="text-muted-foreground p-3 text-center text-xs">
+                    <AlertCircle className="text-muted-foreground/70 mx-auto mb-1.5 h-4 w-4" />
                     Sign in to view repositories
                   </CardContent>
                 </Card>
               ) : !isConfigured ? (
                 <Card className="border-dashed">
-                  <CardContent className="p-3 text-center text-xs text-muted-foreground">
-                    <AlertCircle className="h-4 w-4 mx-auto mb-1.5 text-amber-500" />
+                  <CardContent className="text-muted-foreground p-3 text-center text-xs">
+                    <AlertCircle className="mx-auto mb-1.5 h-4 w-4 text-amber-500" />
                     <p className="mb-2">Connect Jules to view repositories</p>
                     <Link href="/app/integrations" onClick={handleLinkClick}>
-                      <Button variant="outline" size="sm" className="h-7 text-xs">
-                        <Plug className="h-3 w-3 mr-1.5" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                      >
+                        <Plug className="mr-1.5 h-3 w-3" />
                         Connect Jules
                       </Button>
                     </Link>
@@ -220,18 +228,18 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                 <>
                   {(sources.length > 0 || searchQuery) && (
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                      <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-3 w-3 -translate-y-1/2" />
                       <Input
                         type="text"
                         placeholder="Search repos..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-7 pl-7 pr-7 text-xs"
+                        className="h-7 pr-7 pl-7 text-xs"
                       />
                       {searchQuery && (
                         <button
                           onClick={() => setSearchQuery('')}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -239,14 +247,14 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                     </div>
                   )}
 
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                  <div className="max-h-48 space-y-1 overflow-y-auto">
                     {isLoading && sources.length === 0 ? (
-                      <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex items-center justify-center gap-2 py-3 text-xs">
                         <Loader2 className="h-3 w-3 animate-spin" />
                         Loading...
                       </div>
                     ) : hasFetched && filteredSources.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-2">
+                      <p className="text-muted-foreground py-2 text-center text-xs">
                         {searchQuery
                           ? `No repos match "${searchQuery}"`
                           : 'No repositories found'}
@@ -266,7 +274,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                           >
                             <div
                               className={cn(
-                                'flex items-center gap-2 px-2 py-1.5 rounded text-xs cursor-pointer transition-colors',
+                                'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors',
                                 isActive
                                   ? 'bg-accent text-accent-foreground'
                                   : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
@@ -274,7 +282,8 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                             >
                               <GitBranch className="h-3 w-3 flex-shrink-0" />
                               <span className="truncate">
-                                {source.githubRepo.owner}/{source.githubRepo.repo}
+                                {source.githubRepo.owner}/
+                                {source.githubRepo.repo}
                               </span>
                             </div>
                           </Link>

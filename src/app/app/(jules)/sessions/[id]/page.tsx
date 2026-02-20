@@ -1,16 +1,14 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useSessionStore } from '@/stores/use-session-store'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
   Send,
-  Pause,
   AlertCircle,
   CheckCircle2,
   Bot,
@@ -36,7 +34,10 @@ export default function SessionDetailPage() {
   const viewportRef = useRef<HTMLDivElement>(null)
 
   const session = sessions.find((s) => s.id === id)
-  const sessionActivities = activities[id] || []
+  const sessionActivities = useMemo(
+    () => activities[id] || [],
+    [activities, id]
+  )
 
   const fetchData = useCallback(() => {
     if (id && document.visibilityState === 'visible') {
@@ -83,7 +84,7 @@ export default function SessionDetailPage() {
     try {
       await sendMessage(id, inputValue)
       setInputValue('')
-    } catch (error) {
+    } catch {
       toast.error('Failed to send message')
     }
   }
@@ -247,9 +248,7 @@ export default function SessionDetailPage() {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           className="flex-1"
-          disabled={
-            session.state === 'FAILED' || session.state === 'COMPLETED'
-          }
+          disabled={session.state === 'FAILED' || session.state === 'COMPLETED'}
         />
         <Button
           size="icon"

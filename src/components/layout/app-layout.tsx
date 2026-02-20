@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSidebarStore } from '@/stores/use-sidebar-store'
 import { AppSidebar } from '@/components/layout/app-sidebar'
@@ -16,14 +16,14 @@ function SidebarLoader({ width }: { width: number }) {
   const isCollapsed = width < 100
   return (
     <div
-      className="h-full border-r bg-background px-2 md:px-3 pt-3 md:pt-5.5 pb-3 md:pb-4"
+      className="bg-background h-full border-r px-2 pt-3 pb-3 md:px-3 md:pt-5.5 md:pb-4"
       style={{ width: `${width}px` }}
     >
       <div className="mb-3 md:mb-4">
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-1">
             <button
-              className="text-xs font-medium tracking-wide transition-colors px-2 py-1 rounded text-foreground bg-accent"
+              className="text-foreground bg-accent rounded px-2 py-1 text-xs font-medium tracking-wide transition-colors"
               disabled
             >
               Loading...
@@ -35,13 +35,27 @@ function SidebarLoader({ width }: { width: number }) {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="animate-pulse h-9 rounded-lg bg-muted"
+            className="bg-muted h-9 animate-pulse rounded-lg"
             style={{ width: isCollapsed ? 36 : '100%' }}
           />
         ))}
       </div>
     </div>
   )
+}
+
+function getDesktopSnapshot() {
+  return true
+}
+
+function getDesktopServerSnapshot() {
+  return true
+}
+
+function subscribeToDesktop(callback: () => void) {
+  const handleResize = () => callback()
+  window.addEventListener('resize', callback)
+  return () => window.removeEventListener('resize', callback)
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -51,33 +65,19 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const { isOpen, width, toggle, setOpen, setWidth } = useSidebarStore()
   const [isResizing, setIsResizing] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(true)
+  const isDesktop = useSyncExternalStore(
+    subscribeToDesktop,
+    () => window.innerWidth >= 1024,
+    getDesktopServerSnapshot
+  )
   const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
-    const actualIsDesktop = window.innerWidth >= 1024
-    setIsDesktop(actualIsDesktop)
-
-    if (!actualIsDesktop) {
+    setHasMounted(true)
+    if (!isDesktop) {
       setOpen(false)
     }
-
-    setHasMounted(true)
-  }, [setOpen])
-
-  useEffect(() => {
-    const handleResize = () => {
-      const newIsDesktop = window.innerWidth >= 1024
-      setIsDesktop(newIsDesktop)
-
-      if (!newIsDesktop && isOpen) {
-        setOpen(false)
-      }
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [isOpen, setOpen])
+  }, [setOpen, isDesktop])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -181,7 +181,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <TooltipProvider>
       <div
-        className="h-dvh flex relative"
+        className="relative flex h-dvh"
         style={
           {
             '--sidebar-width': `${width}px`,
@@ -193,19 +193,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Backdrop - Mobile Only */}
         {isOpen && (
           <div
-            className="lg:hidden fixed inset-0 bg-black/50 z-30"
+            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
             onClick={closeSidebar}
           />
         )}
 
         {/* Sidebar */}
         <div
-          className={`
-            fixed inset-y-0 left-0 z-40
-            ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'}
-            ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-            ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}
-          `}
+          className={`fixed inset-y-0 left-0 z-40 ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'} ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'} `}
           style={{
             width: `${width}px`,
           }}
@@ -226,23 +221,19 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Resize Handle - Desktop Only */}
         <div
-          className={`
-            hidden lg:block fixed inset-y-0 cursor-col-resize group z-50 hover:bg-primary/20
-            ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'}
-            ${isOpen ? 'w-1 opacity-100' : 'w-0 opacity-0'}
-          `}
+          className={`group hover:bg-primary/20 fixed inset-y-0 z-50 hidden cursor-col-resize lg:block ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'} ${isOpen ? 'w-1 opacity-100' : 'w-0 opacity-0'} `}
           onMouseDown={isOpen ? handleMouseDown : undefined}
           style={{
             left: isOpen ? `${width}px` : '0px',
           }}
         >
-          <div className="absolute inset-0 w-2 -ml-0.5" />
-          <div className="absolute inset-y-0 left-0 w-0.5 bg-primary/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 -ml-0.5 w-2" />
+          <div className="bg-primary/50 absolute inset-y-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
 
         {/* Main Content */}
         <div
-          className={`flex-1 overflow-auto flex flex-col ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'}`}
+          className={`flex flex-1 flex-col overflow-auto ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'}`}
           style={{
             marginLeft: isDesktop && isOpen ? `${width + 4}px` : '0px',
           }}
