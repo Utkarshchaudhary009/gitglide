@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
 interface UserMenuProps {
   user?: {
@@ -25,43 +26,38 @@ interface UserMenuProps {
 
 function ThemeSelector() {
   const { theme, setTheme } = useTheme()
-  const [open, setOpen] = React.useState(false)
 
   const themes = [
-    { value: 'light', label: 'Light', icon: Sun },
-    { value: 'dark', label: 'Dark', icon: Moon },
-    { value: 'system', label: 'System', icon: Monitor },
+    { value: 'light', icon: Sun },
+    { value: 'dark', icon: Moon },
+    { value: 'system', icon: Monitor },
   ]
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start gap-2">
-          <Palette className="h-4 w-4" />
-          Theme
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-40 p-1" align="start" side="left" sideOffset={8}>
+    <div className="flex items-center justify-between px-2 py-1.5">
+      <span className="text-sm font-medium">Theme</span>
+      <div className="flex items-center gap-1 rounded-lg border p-0.5">
         {themes.map((t) => {
           const Icon = t.icon
+          const isActive = theme === t.value
           return (
             <Button
               key={t.value}
-              variant="ghost"
-              className="w-full justify-start gap-2"
-              onClick={() => {
-                setTheme(t.value)
-                setOpen(false)
-              }}
+              variant={isActive ? 'secondary' : 'ghost'}
+              size="icon"
+              className={cn(
+                'h-6 w-6 rounded-md',
+                isActive && 'bg-background shadow-sm'
+              )}
+              onClick={() => setTheme(t.value)}
             >
-              <Icon className="h-4 w-4" />
-              {t.label}
-              {theme === t.value && <Check className="ml-auto h-4 w-4" />}
+              <Icon className="h-3.5 w-3.5" />
+              <span className="sr-only">{t.value}</span>
             </Button>
           )
         })}
-      </PopoverContent>
-    </Popover>
+      </div>
+    </div>
   )
 }
 

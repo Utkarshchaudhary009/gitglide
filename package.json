@@ -13,6 +13,7 @@
     "type-check": "tsc --noEmit",
     "prepare": "husky",
     "postinstall": "bun prisma generate",
+    "pr":"bun scripts/fetch-pr-review.ts",
     "logs:deployment": "bash scripts/deployment-logs.sh",
     "m": "ollama launch claude --model minimax-m2.5:cloud",
     "g": "ollama launch claude --model glm-5:cloud"

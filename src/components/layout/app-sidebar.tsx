@@ -67,10 +67,12 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
     }
   }, [fetchSources, isSignedIn])
 
-  const filteredSources = sources.filter((source) => {
-    const fullName = `${source.githubRepo.owner}/${source.githubRepo.repo}`
-    return fullName.toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  const filteredSources = React.useMemo(() => {
+    return sources.filter((source) => {
+      const fullName = `${source.githubRepo.owner}/${source.githubRepo.repo}`
+      return fullName.toLowerCase().includes(searchQuery.toLowerCase())
+    })
+  }, [sources, searchQuery])
 
   const handleLinkClick = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -86,11 +88,16 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
   return (
     <div
       className={cn(
-        'bg-background flex h-full flex-col border-r pb-12 transition-all duration-300 ease-in-out',
-        isCollapsed ? 'w-[60px]' : 'w-72'
+        'bg-background flex h-full flex-col border-r pb-12 transition-all duration-300 ease-in-out'
       )}
       style={{ width: isCollapsed ? 60 : width }}
-    >
+    <TooltipProvider delayDuration={0}>
+      <div
+        className={cn(
+          'bg-background flex h-full flex-col border-r pb-12 transition-all duration-300 ease-in-out'
+        )}
+        style={{ width: isCollapsed ? 60 : width }}
+      >
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="space-y-1">
@@ -100,31 +107,29 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
 
               if (isCollapsed) {
                 return (
-                  <TooltipProvider key={item.href} delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={item.href}
-                          onClick={handleLinkClick}
-                          className={cn(
-                            'hover:text-foreground mx-auto mb-1 flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
-                            isActive
-                              ? 'bg-accent text-accent-foreground'
-                              : 'text-muted-foreground hover:bg-accent'
-                          )}
-                        >
-                          <Icon className="h-5 w-5" />
-                          <span className="sr-only">{item.title}</span>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        className="flex items-center gap-4"
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        onClick={handleLinkClick}
+                        className={cn(
+                          'hover:text-foreground mx-auto mb-1 flex h-9 w-9 items-center justify-center rounded-lg transition-colors md:h-8 md:w-8',
+                          isActive
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-muted-foreground hover:bg-accent'
+                        )}
                       >
-                        {item.title}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                        <Icon className="h-5 w-5" />
+                        <span className="sr-only">{item.title}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      className="flex items-center gap-4"
+                    >
+                      {item.title}
+                    </TooltipContent>
+                  </Tooltip>
                 )
               }
 
@@ -159,27 +164,25 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
         )}
       >
         {isCollapsed ? (
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    toggle()
-                    setReposOpen(true)
-                  }}
-                  className="text-muted-foreground hover:bg-accent hover:text-foreground mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-lg md:h-8 md:w-8"
-                >
-                  <GitBranch className="h-5 w-5" />
-                  <span className="sr-only">Repositories</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="flex items-center gap-4">
-                Repositories
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  toggle()
+                  setReposOpen(true)
+                }}
+                className="text-muted-foreground hover:bg-accent hover:text-foreground mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-lg md:h-8 md:w-8"
+              >
+                <GitBranch className="h-5 w-5" />
+                <span className="sr-only">Repositories</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="flex items-center gap-4">
+              Repositories
+            </TooltipContent>
+          </Tooltip>
         ) : (
           <Collapsible open={reposOpen} onOpenChange={setReposOpen}>
             <CollapsibleTrigger asChild>
@@ -262,9 +265,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                     ) : (
                       filteredSources.map((source) => {
                         const repoPath = `/app/repos/${source.githubRepo.owner}/${source.githubRepo.repo}`
-                        const isActive =
-                          pathname === repoPath ||
-                          pathname.startsWith(repoPath + '/')
+                        const isActive = isNavActive(repoPath)
 
                         return (
                           <Link

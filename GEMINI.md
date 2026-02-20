@@ -22,7 +22,7 @@
 - **Other**: styles → `src/app/globals.css`, assets → `public/`, DB → `prisma/schema.prisma`, docs → `docs/` & `refrence/`.
 
 ## Commands (Bun only — never npm/pnpm)
-- `bun logs:deployment` then wait for 20sec — inspect latest Vercel deploy (streams logs on failure, summary on success).
+- `bun logs:deployment` — inspect latest Vercel deploy (streams logs on failure, summary on success).
 - **Never run locally** (PC too weak): `bun dev|build|start|lint|format|format:check|type-check`.
 
 ## Coding Style
@@ -35,7 +35,7 @@
 - Always branch for new work.
 - After passing Compliance Checklist, ask: "Should I create a pull request?" Then commit + open a detailed PR (summary, key changes, test results, UI screenshots).
 - **Post-PR**: wait 120s → `bun logs:deployment` → fix failures before requesting review.
-- **"check review"** → `gh pr view {N} --json reviews --jq '.reviews'` → fix errors/suggestions.
+- **"check review"** → `bun run pr` → fix errors/suggestions.
 - **"rebase"** → rebase to main, squash trivial commits (typos, lint, type fixes, forgotten lib installs). Never squash feature commits.
 
 ## Security

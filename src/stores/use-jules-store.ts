@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useSourcesStore } from './use-sources-store'
 
 interface JulesStore {
   isConnected: boolean
@@ -17,20 +18,17 @@ export const useJulesStore = create<JulesStore>((set) => ({
   checkConnection: async () => {
     set({ isChecking: true, error: null })
     try {
-      const response = await fetch('/api/jules/sources?pageSize=1')
-      if (response.ok) {
-        set({ isConnected: true, isChecking: false })
-      } else if (response.status === 401) {
+      await useSourcesStore.getState().fetchSources(undefined)
+      const { error, isConfigured } = useSourcesStore.getState()
+
+      if (error === 'Not authenticated') {
         set({ isConnected: false, isChecking: false, error: 'Not authenticated' })
-      } else if (response.status === 500) {
-        const data = await response.json()
-        if (data.error?.includes('not configured')) {
-          set({ isConnected: false, isChecking: false, error: 'Jules API not configured' })
-        } else {
-          set({ isConnected: false, isChecking: false, error: data.error })
-        }
+      } else if (!isConfigured) {
+        set({ isConnected: false, isChecking: false, error: 'Jules API not configured' })
+      } else if (error) {
+        set({ isConnected: false, isChecking: false, error })
       } else {
-        set({ isConnected: false, isChecking: false })
+        set({ isConnected: true, isChecking: false })
       }
     } catch {
       set({ isConnected: false, isChecking: false, error: 'Failed to check Jules connection' })

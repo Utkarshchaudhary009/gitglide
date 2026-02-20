@@ -109,7 +109,7 @@ function groupSessionsByDate(sessions: Session[]) {
 
   if (today.length > 0) groups.push({ label: 'TODAY', sessions: today })
   if (thisWeek.length > 0)
-    groups.push({ label: 'LAST 7 DAYS', sessions: thisWeek })
+    groups.push({ label: 'THIS WEEK', sessions: thisWeek })
   if (older.length > 0) groups.push({ label: 'OLDER', sessions: older })
 
   return groups
@@ -118,8 +118,8 @@ function groupSessionsByDate(sessions: Session[]) {
 function SessionRow({ session }: { session: Session }) {
   const config = stateConfig[session.state] || stateConfig.STATE_UNSPECIFIED
   const StateIcon = config.icon
-  const hasPR = session.outputs?.some((o) => o.pullRequest)
   const pr = session.outputs?.find((o) => o.pullRequest)?.pullRequest
+  const hasPR = !!pr
 
   return (
     <Link
@@ -163,7 +163,7 @@ function SessionRow({ session }: { session: Session }) {
             className={cn(
               'h-3 w-3',
               (session.state === 'PLANNING' || session.state === 'IN_PROGRESS') &&
-                'animate-spin'
+              'animate-spin'
             )}
           />
           {config.label}

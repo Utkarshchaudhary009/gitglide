@@ -50,7 +50,7 @@ export function Header({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>Toggle sidebar (Ctrl+B)</p>
+              <p>Toggle sidebar</p>
             </TooltipContent>
           </Tooltip>
 

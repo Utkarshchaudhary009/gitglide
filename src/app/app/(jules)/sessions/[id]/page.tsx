@@ -109,7 +109,9 @@ export default function SessionDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 p-20">
         <AlertCircle className="text-destructive h-8 w-8" />
-        <p className="text-destructive font-medium">{storeError}</p>
+        <p className="text-destructive font-medium">
+          An error occurred while loading the session.
+        </p>
         <Button onClick={() => refreshSession(id)}>Retry</Button>
       </div>
     )
@@ -122,6 +124,10 @@ export default function SessionDetailPage() {
       </div>
     )
   }
+
+  return (
+  const isTerminalState =
+      session.state === 'FAILED' || session.state === 'COMPLETED'
 
   return (
     <div className="flex h-[calc(100vh-theme(spacing.20))] flex-col gap-4">
@@ -216,11 +222,10 @@ export default function SessionDetailPage() {
                   </span>
                 </div>
                 <div
-                  className={`rounded-xl px-4 py-2.5 text-sm ${
-                    activity.originator === 'user'
+                  className={`rounded-xl px-4 py-2.5 text-sm ${activity.originator === 'user'
                       ? 'bg-primary text-primary-foreground rounded-tr-none'
                       : 'bg-card rounded-tl-none border shadow-sm'
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap">{activity.description}</p>
                 </div>
@@ -248,16 +253,12 @@ export default function SessionDetailPage() {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           className="flex-1"
-          disabled={session.state === 'FAILED' || session.state === 'COMPLETED'}
+          disabled={isTerminalState}
         />
         <Button
           size="icon"
           onClick={handleSendMessage}
-          disabled={
-            !inputValue.trim() ||
-            session.state === 'FAILED' ||
-            session.state === 'COMPLETED'
-          }
+          disabled={!inputValue.trim() || isTerminalState}
         >
           <Send className="h-4 w-4" />
         </Button>

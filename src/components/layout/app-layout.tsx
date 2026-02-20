@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSidebarStore } from '@/stores/use-sidebar-store'
+import { useSidebarStore, RAIL_WIDTH, MAX_WIDTH, COLLAPSE_THRESHOLD } from '@/stores/use-sidebar-store'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { Header } from '@/components/layout/header'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useClerk, useUser } from '@clerk/nextjs'
+import { ApiKeyDialog } from '@/components/user/api-key-dialog'
 
 interface AppLayoutProps {
   children: React.ReactNode
 }
 
 function SidebarLoader({ width }: { width: number }) {
-  const isCollapsed = width < 100
+  const isCollapsed = width < COLLAPSE_THRESHOLD
   return (
     <div
       className="bg-background h-full border-r px-2 pt-3 pb-3 md:px-3 md:pt-5.5 md:pb-4"
@@ -45,7 +46,7 @@ function SidebarLoader({ width }: { width: number }) {
 }
 
 function subscribeToMount(callback: () => void) {
-  return () => {}
+  return () => { }
 }
 
 function getMountSnapshot() {
@@ -76,11 +77,11 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const { isOpen, width, toggle, setOpen, setWidth } = useSidebarStore()
   const [isResizing, setIsResizing] = useState(false)
-  const hasMounted = useSyncExternalStore(
-    subscribeToMount,
-    getMountSnapshot,
-    getMountServerSnapshot
-  )
+  const [hasMounted, setHasMounted] = useState(false)
+  const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
   const isDesktop = useSyncExternalStore(
     subscribeToDesktop,
     getDesktopSnapshot,
@@ -138,13 +139,10 @@ export function AppLayout({ children }: AppLayoutProps) {
       if (!isResizing) return
 
       const newWidth = e.clientX
-      const railWidth = 64
-      const minExpandedWidth = 200
-      const maxWidth = 600
 
-      if (newWidth < 100) {
-        setWidth(railWidth)
-      } else if (newWidth >= minExpandedWidth && newWidth <= maxWidth) {
+      if (newWidth < COLLAPSE_THRESHOLD) {
+        setWidth(RAIL_WIDTH)
+      } else if (newWidth >= COLLAPSE_THRESHOLD && newWidth <= MAX_WIDTH) {
         setWidth(newWidth)
       }
     }
@@ -169,7 +167,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [isResizing, setWidth])
 
   const handleApiKeys = () => {
-    router.push('/app/settings')
+    setIsApiKeyDialogOpen(true)
   }
 
   const handleLogOut = () => {
@@ -178,10 +176,10 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const userData = user
     ? {
-        name: user.fullName || user.username || 'User',
-        email: user.primaryEmailAddress?.emailAddress || '',
-        avatarUrl: user.imageUrl,
-      }
+      name: user.fullName || user.username || 'User',
+      email: user.primaryEmailAddress?.emailAddress || '',
+      avatarUrl: user.imageUrl,
+    }
     : undefined
 
   if (!isLoaded) {
@@ -205,7 +203,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         suppressHydrationWarning
       >
         {/* Backdrop - Mobile Only */}
-        {isOpen && (
+        {isOpen && !isDesktop && (
           <div
             className="fixed inset-0 z-30 bg-black/50 lg:hidden"
             onClick={closeSidebar}
@@ -258,6 +256,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             onLogOut={handleLogOut}
           />
           <main className="flex flex-1 flex-col overflow-auto">{children}</main>
+          <ApiKeyDialog
+            open={isApiKeyDialogOpen}
+            onOpenChange={setIsApiKeyDialogOpen}
+          />
         </div>
       </div>
     </TooltipProvider>
