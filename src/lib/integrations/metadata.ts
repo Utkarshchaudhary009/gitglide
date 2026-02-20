@@ -12,7 +12,7 @@ export const PROVIDERS: Record<IntegrationProvider, ProviderMetadata> = {
     id: 'jules',
     name: 'Jules',
     description: 'Connect your Jules account for AI-powered development assistance.',
-    tokenCreateUrl: 'https://jules.google.com/settings',
+    tokenCreateUrl: 'https://jules.google.com/settings/api',
     tokenNote: 'Read/Write',
   },
 }

@@ -35,8 +35,8 @@ export async function POST(req: Request) {
       try {
         send(createStreamMessage('progress', { message: 'Connecting to Jules...' }))
 
-        const response = await fetch('https://julius.googleapis.com/v1alpha/sessions', {
-          headers: { 'X-Goog-Api-Key': token },
+        const response = await fetch('https://jules.googleapis.com/v1alpha/sessions', {
+          headers: { 'x-goog-api-key': token },
         })
 
         if (!response.ok) {
