@@ -16,12 +16,15 @@ import {
   X,
   ChevronDown,
   ChevronRight,
+  AlertCircle,
 } from 'lucide-react'
+import { useUser } from '@clerk/nextjs'
 import { useSourcesStore } from '@/stores/use-sources-store'
 import { useSidebarStore } from '@/stores/use-sidebar-store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Collapsible,
   CollapsibleContent,
@@ -50,15 +53,19 @@ interface AppSidebarProps {
 export function AppSidebar({ width = 288 }: AppSidebarProps) {
   const pathname = usePathname()
   const { toggle, setOpen } = useSidebarStore()
+  const { isSignedIn } = useUser()
   const isCollapsed = width < 100
 
-  const { sources, fetchSources, isLoading } = useSourcesStore()
+  const { sources, fetchSources, isLoading, isConfigured, hasFetched, error } =
+    useSourcesStore()
   const [reposOpen, setReposOpen] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState('')
 
   React.useEffect(() => {
-    fetchSources()
-  }, [fetchSources])
+    if (isSignedIn) {
+      fetchSources()
+    }
+  }, [fetchSources, isSignedIn])
 
   const filteredSources = sources.filter((source) => {
     const fullName = `${source.githubRepo.owner}/${source.githubRepo.repo}`
@@ -189,70 +196,94 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-2 pt-2">
-              {(sources.length > 0 || searchQuery) && (
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search repos..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-7 pl-7 pr-7 text-xs"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {isLoading && sources.length === 0 ? (
-                  <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Loading...
-                  </div>
-                ) : filteredSources.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-2">
-                    {searchQuery
-                      ? `No repos match "${searchQuery}"`
-                      : 'No repositories found'}
-                  </p>
-                ) : (
-                  filteredSources.map((source) => {
-                    const repoPath = `/app/repos/${source.githubRepo.owner}/${source.githubRepo.repo}`
-                    const isActive =
-                      pathname === repoPath ||
-                      pathname.startsWith(repoPath + '/')
-
-                    return (
-                      <Link
-                        key={source.id}
-                        href={repoPath}
-                        onClick={handleLinkClick}
-                      >
-                        <div
-                          className={cn(
-                            'flex items-center gap-2 px-2 py-1.5 rounded text-xs cursor-pointer transition-colors',
-                            isActive
-                              ? 'bg-accent text-accent-foreground'
-                              : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                          )}
+              {!isSignedIn ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-3 text-center text-xs text-muted-foreground">
+                    <AlertCircle className="h-4 w-4 mx-auto mb-1.5 text-muted-foreground/70" />
+                    Sign in to view repositories
+                  </CardContent>
+                </Card>
+              ) : !isConfigured ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-3 text-center text-xs text-muted-foreground">
+                    <AlertCircle className="h-4 w-4 mx-auto mb-1.5 text-amber-500" />
+                    <p className="mb-2">Connect Jules to view repositories</p>
+                    <Link href="/app/integrations" onClick={handleLinkClick}>
+                      <Button variant="outline" size="sm" className="h-7 text-xs">
+                        <Plug className="h-3 w-3 mr-1.5" />
+                        Connect Jules
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {(sources.length > 0 || searchQuery) && (
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Search repos..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-7 pl-7 pr-7 text-xs"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
-                          <GitBranch className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">
-                            {source.githubRepo.owner}/{source.githubRepo.repo}
-                          </span>
-                        </div>
-                      </Link>
-                    )
-                  })
-                )}
-              </div>
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {isLoading && sources.length === 0 ? (
+                      <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Loading...
+                      </div>
+                    ) : hasFetched && filteredSources.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-2">
+                        {searchQuery
+                          ? `No repos match "${searchQuery}"`
+                          : 'No repositories found'}
+                      </p>
+                    ) : (
+                      filteredSources.map((source) => {
+                        const repoPath = `/app/repos/${source.githubRepo.owner}/${source.githubRepo.repo}`
+                        const isActive =
+                          pathname === repoPath ||
+                          pathname.startsWith(repoPath + '/')
+
+                        return (
+                          <Link
+                            key={source.id}
+                            href={repoPath}
+                            onClick={handleLinkClick}
+                          >
+                            <div
+                              className={cn(
+                                'flex items-center gap-2 px-2 py-1.5 rounded text-xs cursor-pointer transition-colors',
+                                isActive
+                                  ? 'bg-accent text-accent-foreground'
+                                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                              )}
+                            >
+                              <GitBranch className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">
+                                {source.githubRepo.owner}/{source.githubRepo.repo}
+                              </span>
+                            </div>
+                          </Link>
+                        )
+                      })
+                    )}
+                  </div>
+                </>
+              )}
             </CollapsibleContent>
           </Collapsible>
         )}
