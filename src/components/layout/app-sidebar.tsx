@@ -57,50 +57,24 @@ const navItems = [
 function NavItem({
   item,
   isActive,
-  isCollapsed,
 }: {
   item: (typeof navItems)[0]
   isActive: boolean
-  isCollapsed: boolean
 }) {
   const Icon = item.icon
 
-  const button = (
-    <SidebarMenuButton
-      asChild
-      isActive={isActive}
-      tooltip={isCollapsed ? item.title : undefined}
-    >
+  return (
+    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
       <Link href={item.href}>
-        <Icon className="h-4 w-4" />
-        <span
-          className={cn(
-            'transition-opacity duration-200',
-            isCollapsed ? 'w-0 opacity-0' : 'opacity-100'
-          )}
-        >
-          {item.title}
-        </span>
+        <Icon className="h-4 w-4 shrink-0" />
+        <span>{item.title}</span>
       </Link>
     </SidebarMenuButton>
   )
-
-  if (isCollapsed) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="right">{item.title}</TooltipContent>
-      </Tooltip>
-    )
-  }
-
-  return button
 }
 
 function SidebarNav() {
   const pathname = usePathname()
-  const { state } = useSidebar()
-  const isCollapsed = state === 'collapsed'
 
   return (
     <SidebarGroup>
@@ -108,11 +82,7 @@ function SidebarNav() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <NavItem
-                item={item}
-                isActive={pathname === item.href}
-                isCollapsed={isCollapsed}
-              />
+              <NavItem item={item} isActive={pathname === item.href} />
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
@@ -274,8 +244,10 @@ interface AppSidebarProps {
 export function AppSidebar({ children }: AppSidebarProps) {
   const isMobile = useIsMobile()
 
+  // Desktop: collapsed by default (icon-only)
+  // Mobile: closed by default (offcanvas handles open state separately)
   return (
-    <SidebarProvider defaultOpen={isMobile}>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebarContent isMobile={isMobile} />
       <main className="flex-1 overflow-auto">{children}</main>
     </SidebarProvider>
