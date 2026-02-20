@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-// @ts-nocheck
-
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { writeFileSync } from 'fs'
 import { $ } from 'bun'
 
@@ -67,7 +67,7 @@ function generateReviewMD(pr: PRInfo, reviews: Review[]): string {
       lines.push(`### Review by ${reviewer}`)
       lines.push('')
 
-      let body = review.body
+      const body = review.body
 
       lines.push(body.trim())
       lines.push('')
