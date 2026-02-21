@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server'
 import { apiError, apiSuccess } from '@/lib/api/response'
 import { inngest } from '@/inngest/client'
 import crypto from 'crypto'
@@ -40,7 +39,7 @@ export async function POST(req: Request) {
                 })
 
                 if (config && config.config && typeof config.config === 'object' && 'secret' in config.config) {
-                    const secret = (config.config as any).secret as string
+                    const secret = (config.config as { secret: string }).secret
 
                     // Verify the signature
                     const hmac = crypto.createHmac('sha1', secret)

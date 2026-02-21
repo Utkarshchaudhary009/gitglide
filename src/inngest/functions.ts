@@ -177,7 +177,7 @@ export const vercelBuildFailed = inngest.createFunction(
                     throw new Error("Deployment does not have GitHub linkage metadata");
                 }
                 // Formulate prompt
-                const deploymentUrl = (payload as Record<string, any>)?.deployment?.url || deploymentId;
+                const deploymentUrl = (payload as { deployment?: { url?: string } })?.deployment?.url || deploymentId;
                 const prompt = `Fix the build failure in Vercel project deployment: ${deploymentUrl}.
 Event: deployment.error.
 Please check the latest build logs or error trace and resolve the issue. If it's a type error or lint error, please supply the fixes.`;
