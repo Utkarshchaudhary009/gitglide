@@ -127,10 +127,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             if (isDesktop) toggleDesktop()
             else toggleMobile()
             break
-          case ',':
-            e.preventDefault()
-            router.push('/app/settings')
-            break
         }
       }
     }

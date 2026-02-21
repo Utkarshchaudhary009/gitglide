@@ -40,7 +40,9 @@ export const useSessionStore = create<SessionStore>((set) => ({
     try {
       const response = await fetch('/api/jules/sessions')
       if (!response.ok) throw new Error('Failed to fetch sessions')
-      const sessions = await response.json()
+      const data = await response.json()
+      // Google APIs typically return { sessions: [...] }
+      const sessions = Array.isArray(data) ? data : data.sessions || []
       set({ sessions, isLoading: false })
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false })
