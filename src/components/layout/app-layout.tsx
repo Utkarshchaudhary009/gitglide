@@ -2,9 +2,21 @@
 
 import { useState, useEffect, useSyncExternalStore, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useMobileSidebarStore, useDesktopSidebarStore, RAIL_WIDTH, MAX_WIDTH, COLLAPSE_THRESHOLD } from '@/stores/use-sidebar-store'
+import {
+  useMobileSidebarStore,
+  useDesktopSidebarStore,
+  RAIL_WIDTH,
+  MAX_WIDTH,
+  COLLAPSE_THRESHOLD,
+} from '@/stores/use-sidebar-store'
 import { AppSidebar } from '@/components/layout/app-sidebar'
-import { Sheet, SheetContent, SheetTitle, SheetHeader, SheetDescription } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetHeader,
+  SheetDescription,
+} from '@/components/ui/sheet'
 import { Header } from '@/components/layout/header'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useClerk, useUser } from '@clerk/nextjs'
@@ -46,7 +58,6 @@ function SidebarLoader({ width }: { width: number }) {
   )
 }
 
-
 function subscribeToDesktop(callback: () => void) {
   window.addEventListener('resize', callback)
   return () => window.removeEventListener('resize', callback)
@@ -67,7 +78,11 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const { width, setWidth } = useDesktopSidebarStore()
   const toggleDesktop = useDesktopSidebarStore((state) => state.toggle)
-  const { isOpen: isMobileOpen, setOpen: setMobileOpen, toggle: toggleMobile } = useMobileSidebarStore()
+  const {
+    isOpen: isMobileOpen,
+    setOpen: setMobileOpen,
+    toggle: toggleMobile,
+  } = useMobileSidebarStore()
   const [isResizing, setIsResizing] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
@@ -171,10 +186,10 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const userData = user
     ? {
-      name: user.fullName || user.username || 'User',
-      email: user.primaryEmailAddress?.emailAddress || '',
-      avatarUrl: user.imageUrl,
-    }
+        name: user.fullName || user.username || 'User',
+        email: user.primaryEmailAddress?.emailAddress || '',
+        avatarUrl: user.imageUrl,
+      }
     : undefined
 
   if (!isLoaded) {
@@ -192,7 +207,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         style={
           {
             '--sidebar-width': `${width}px`,
-            '--sidebar-open': isOpen ? '1' : '0',
+            '--sidebar-open': width > COLLAPSE_THRESHOLD ? '1' : '0',
           } as React.CSSProperties
         }
         suppressHydrationWarning
@@ -200,12 +215,22 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Mobile Sidebar via Sheet */}
         {!isDesktop && (
           <Sheet open={isMobileOpen} onOpenChange={setMobileOpen}>
-            <SheetContent side="left" className="p-0 border-r-0 w-72" aria-describedby={undefined}>
+            <SheetContent
+              side="left"
+              className="w-72 border-r-0 p-0"
+              aria-describedby={undefined}
+            >
               <SheetHeader className="sr-only">
                 <SheetTitle>Navigation Menu</SheetTitle>
-                <SheetDescription>Access navigation links and repositories</SheetDescription>
+                <SheetDescription>
+                  Access navigation links and repositories
+                </SheetDescription>
               </SheetHeader>
-              {!hasMounted ? <SidebarLoader width={288} /> : <AppSidebar width={288} />}
+              {!hasMounted ? (
+                <SidebarLoader width={288} />
+              ) : (
+                <AppSidebar width={288} />
+              )}
             </SheetContent>
           </Sheet>
         )}
