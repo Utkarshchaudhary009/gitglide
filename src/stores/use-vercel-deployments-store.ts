@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { toast } from 'sonner'
+import type { ApiResponse } from '@/types/api'
 
 export interface Deployment {
     id: string
@@ -26,7 +26,7 @@ interface VercelDeploymentsStore {
     fetchDeployments: () => Promise<void>
 }
 
-export const useVercelDeploymentsStore = create<VercelDeploymentsStore>((set, get) => ({
+export const useVercelDeploymentsStore = create<VercelDeploymentsStore>((set) => ({
     deployments: [],
     isLoading: true,
     error: null,
@@ -35,12 +35,15 @@ export const useVercelDeploymentsStore = create<VercelDeploymentsStore>((set, ge
         set({ isLoading: true, error: null })
         try {
             const res = await fetch('/api/integrations/vercel/deployments')
-            if (!res.ok) {
-                throw new Error('Failed to fetch deployments')
+            const data = await res.json() as ApiResponse<{ deployments: Deployment[] }>
+
+            if (!res.ok || !data.success) {
+                const message = !data.success ? data.error.message : 'Failed to fetch deployments'
+                throw new Error(message)
             }
-            const data = await res.json()
-            set({ deployments: data.deployments || [], isLoading: false })
-        } catch (err: any) {
+
+            set({ deployments: data.data.deployments || [], isLoading: false })
+        } catch (err: unknown) {
             console.error(err)
             set({
                 error: 'Could not load Vercel deployments. Make sure Vercel is connected.',

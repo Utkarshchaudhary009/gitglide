@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ExternalLink, Loader2, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
-import { useVercelDeploymentsStore, type Deployment } from '@/stores/use-vercel-deployments-store'
+import { useVercelDeploymentsStore } from '@/stores/use-vercel-deployments-store'
 import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 

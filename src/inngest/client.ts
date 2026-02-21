@@ -14,7 +14,7 @@ type Events = {
             userId?: string;
             projectId: string;
             deploymentId: string;
-            payload: any;
+            payload: Record<string, unknown>;
         };
     };
 };

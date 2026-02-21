@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { toast } from 'sonner'
+import type { ApiResponse } from '@/types/api'
 
 export interface VercelProject {
   id: string
@@ -19,7 +20,7 @@ interface VercelProjectsStore {
   toggleProject: (projectId: string, currentEnabled: boolean, hasLinkedRepo?: boolean) => Promise<void>
 }
 
-export const useVercelProjectsStore = create<VercelProjectsStore>((set, get) => ({
+export const useVercelProjectsStore = create<VercelProjectsStore>((set) => ({
   projects: [],
   isLoading: true,
   isToggling: {},
@@ -29,15 +30,19 @@ export const useVercelProjectsStore = create<VercelProjectsStore>((set, get) => 
     set({ isLoading: true, error: null })
     try {
       const res = await fetch('/api/integrations/vercel/projects')
-      if (!res.ok) {
-        throw new Error('Failed to fetch projects')
+      const data = await res.json() as ApiResponse<{ projects: VercelProject[] }>
+
+      if (!res.ok || !data.success) {
+        const message = !data.success ? data.error.message : 'Failed to fetch projects'
+        throw new Error(message)
       }
-      const data = await res.json()
-      set({ projects: data.projects || [], isLoading: false })
-    } catch (err: any) {
+
+      set({ projects: data.data.projects || [], isLoading: false })
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Could not load Vercel projects. Make sure Vercel is connected.';
       console.error(err)
       set({
-        error: 'Could not load Vercel projects. Make sure Vercel is connected.',
+        error: errorMessage,
         isLoading: false,
       })
     }
@@ -50,7 +55,7 @@ export const useVercelProjectsStore = create<VercelProjectsStore>((set, get) => 
     }
 
     const newEnabled = !currentEnabled
-    
+
     // Optimistic update
     set((state) => ({
       isToggling: { ...state.isToggling, [projectId]: true },
@@ -69,12 +74,12 @@ export const useVercelProjectsStore = create<VercelProjectsStore>((set, get) => 
       if (!res.ok) {
         throw new Error('Failed to toggle project')
       }
-      
+
       toast.success(newEnabled ? 'Auto-fix enabled for project' : 'Auto-fix disabled for project')
     } catch (err) {
       console.error(err)
       toast.error('Failed to change project integration status')
-      
+
       // Revert optimistic update
       set((state) => ({
         projects: state.projects.map((p) =>

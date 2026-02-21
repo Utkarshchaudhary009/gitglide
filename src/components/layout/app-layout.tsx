@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useSyncExternalStore } from 'react'
+import { useState, useEffect, useSyncExternalStore, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSidebarStore, RAIL_WIDTH, MAX_WIDTH, COLLAPSE_THRESHOLD } from '@/stores/use-sidebar-store'
+import { useMobileSidebarStore, useDesktopSidebarStore, RAIL_WIDTH, MAX_WIDTH, COLLAPSE_THRESHOLD } from '@/stores/use-sidebar-store'
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { Sheet, SheetContent, SheetTitle, SheetHeader, SheetDescription } from '@/components/ui/sheet'
 import { Header } from '@/components/layout/header'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useClerk, useUser } from '@clerk/nextjs'
@@ -64,7 +65,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { signOut } = useClerk()
   const router = useRouter()
 
-  const { isOpen, width, toggle, setOpen, setWidth } = useSidebarStore()
+  const { width, setWidth } = useDesktopSidebarStore()
+  const toggleDesktop = useDesktopSidebarStore((state) => state.toggle)
+  const { isOpen: isMobileOpen, setOpen: setMobileOpen, toggle: toggleMobile } = useMobileSidebarStore()
   const [isResizing, setIsResizing] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false)
@@ -80,11 +83,14 @@ export function AppLayout({ children }: AppLayoutProps) {
     getDesktopServerSnapshot
   )
 
+  const prevIsDesktop = useRef(isDesktop)
+
   useEffect(() => {
-    if (!isDesktop && isOpen) {
-      setOpen(false)
+    if (prevIsDesktop.current && !isDesktop) {
+      setMobileOpen(false)
     }
-  }, [isDesktop, isOpen, setOpen])
+    prevIsDesktop.current = isDesktop
+  }, [isDesktop, setMobileOpen])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -103,7 +109,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         switch (e.key.toLowerCase()) {
           case 'b':
             e.preventDefault()
-            toggle()
+            if (isDesktop) toggleDesktop()
+            else toggleMobile()
             break
           case ',':
             e.preventDefault()
@@ -115,11 +122,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [toggle, router])
-
-  const closeSidebar = () => {
-    setOpen(false)
-  }
+  }, [toggleMobile, toggleDesktop, isDesktop, router])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -194,52 +197,61 @@ export function AppLayout({ children }: AppLayoutProps) {
         }
         suppressHydrationWarning
       >
-        {/* Backdrop - Mobile Only */}
-        {isOpen && !isDesktop && (
-          <div
-            className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-            onClick={closeSidebar}
-          />
+        {/* Mobile Sidebar via Sheet */}
+        {!isDesktop && (
+          <Sheet open={isMobileOpen} onOpenChange={setMobileOpen}>
+            <SheetContent side="left" className="p-0 border-r-0 w-72" aria-describedby={undefined}>
+              <SheetHeader className="sr-only">
+                <SheetTitle>Navigation Menu</SheetTitle>
+                <SheetDescription>Access navigation links and repositories</SheetDescription>
+              </SheetHeader>
+              {!hasMounted ? <SidebarLoader width={288} /> : <AppSidebar width={288} />}
+            </SheetContent>
+          </Sheet>
         )}
 
-        {/* Sidebar */}
-        <div
-          className={`fixed inset-y-0 left-0 z-40 ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'} ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'} `}
-          style={{
-            width: `${width}px`,
-          }}
-        >
+        {/* Desktop Sidebar */}
+        {isDesktop && (
           <div
-            className="h-full overflow-hidden"
+            className={`fixed inset-y-0 left-0 z-40 ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'}`}
             style={{
               width: `${width}px`,
             }}
           >
-            {!hasMounted ? (
-              <SidebarLoader width={width} />
-            ) : (
-              <AppSidebar width={width} />
-            )}
+            <div
+              className="h-full overflow-hidden"
+              style={{
+                width: `${width}px`,
+              }}
+            >
+              {!hasMounted ? (
+                <SidebarLoader width={width} />
+              ) : (
+                <AppSidebar width={width} />
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Resize Handle - Desktop Only */}
-        <div
-          className={`group hover:bg-primary/20 fixed inset-y-0 z-50 hidden cursor-col-resize lg:block ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'} ${isOpen ? 'w-1 opacity-100' : 'w-0 opacity-0'} `}
-          onMouseDown={isOpen ? handleMouseDown : undefined}
-          style={{
-            left: isOpen ? `${width}px` : '0px',
-          }}
-        >
-          <div className="absolute inset-0 -ml-0.5 w-2" />
-          <div className="bg-primary/50 absolute inset-y-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100" />
-        </div>
+        {isDesktop && (
+          <div
+            className={`group hover:bg-primary/20 fixed inset-y-0 z-50 hidden cursor-col-resize lg:block ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'} w-1 opacity-100`}
+            onMouseDown={handleMouseDown}
+            style={{
+              left: `${width}px`,
+            }}
+          >
+            <div className="absolute inset-0 -ml-0.5 w-2" />
+            <div className="bg-primary/50 absolute inset-y-0 left-0 w-0.5 opacity-0 transition-opacity group-hover:opacity-100" />
+          </div>
+        )}
 
         {/* Main Content */}
         <div
           className={`flex flex-1 flex-col overflow-auto ${isResizing || !hasMounted ? '' : 'transition-all duration-300 ease-in-out'}`}
           style={{
-            marginLeft: isDesktop && isOpen ? `${width + 4}px` : '0px',
+            marginLeft: isDesktop ? `${width + 4}px` : '0px',
           }}
         >
           <Header

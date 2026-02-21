@@ -1,12 +1,12 @@
 import { auth } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
+import { apiError, apiSuccess } from '@/lib/api/response'
 import prisma from '@/lib/db'
 import { decrypt } from '@/lib/security/encryption'
 
 export async function GET() {
     const { userId } = await auth()
     if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return apiError('Unauthorized', 401)
     }
 
     try {
@@ -15,7 +15,7 @@ export async function GET() {
         })
 
         if (!settings?.vercelToken) {
-            return NextResponse.json({ error: 'Vercel not connected' }, { status: 400 })
+            return apiError('Vercel not connected', 400)
         }
 
         const token = decrypt(settings.vercelToken)
@@ -29,9 +29,9 @@ export async function GET() {
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
                 // Token might be invalid
-                return NextResponse.json({ error: 'Vercel token invalid or expired' }, { status: 401 })
+                return apiError('Vercel token invalid or expired', 401)
             }
-            return NextResponse.json({ error: 'Failed to fetch Vercel projects' }, { status: response.status })
+            return apiError('Failed to fetch Vercel projects', response.status)
         }
 
         const data = await response.json()
@@ -51,8 +51,15 @@ export async function GET() {
             integrationConfigs.map(config => [config.type.replace('vercel_project_', ''), config.enabled])
         )
 
+        type VercelProjectAPIResponse = {
+            id: string;
+            name: string;
+            framework: string | null;
+            link?: { repoUrl: string };
+        }
+
         // Map projects to include their integration status
-        const projectsWithStatus = projects.map((p: any) => ({
+        const projectsWithStatus = projects.map((p: VercelProjectAPIResponse) => ({
             id: p.id,
             name: p.name,
             framework: p.framework,
@@ -60,9 +67,9 @@ export async function GET() {
             hasLinkedRepo: !!p.link?.repoUrl
         }))
 
-        return NextResponse.json({ projects: projectsWithStatus })
+        return apiSuccess({ projects: projectsWithStatus })
     } catch (error) {
         console.error('Failed to get Vercel projects:', error)
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+        return apiError('Internal Server Error', 500)
     }
 }

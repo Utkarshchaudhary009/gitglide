@@ -1,8 +1,6 @@
 import { inngest } from "./client";
 import prisma from "@/lib/db";
 import { decrypt } from "@/lib/security/encryption";
-import crypto from "crypto";
-
 export const vercelProjectToggled = inngest.createFunction(
     { id: "vercel-project-toggled" },
     { event: "vercel/project.toggled" },
@@ -83,7 +81,7 @@ export const vercelProjectToggled = inngest.createFunction(
             });
 
             const webhookId = config?.config && typeof config.config === "object" && "webhookId" in config.config
-                ? (config.config as any).webhookId
+                ? (config.config as { webhookId: string }).webhookId
                 : null;
 
             if (webhookId) {
@@ -130,7 +128,7 @@ export const vercelBuildFailed = inngest.createFunction(
                     clerkUserId: userId,
                     source: "vercel",
                     event: "deployment.error",
-                    payload,
+                    payload: payload as unknown as import('@prisma/client').Prisma.InputJsonValue,
                     status: "processing",
                 },
             });
@@ -179,7 +177,8 @@ export const vercelBuildFailed = inngest.createFunction(
                     throw new Error("Deployment does not have GitHub linkage metadata");
                 }
                 // Formulate prompt
-                const prompt = `Fix the build failure in Vercel project deployment: ${payload?.deployment?.url}.
+                const deploymentUrl = (payload as Record<string, any>)?.deployment?.url || deploymentId;
+                const prompt = `Fix the build failure in Vercel project deployment: ${deploymentUrl}.
 Event: deployment.error.
 Please check the latest build logs or error trace and resolve the issue. If it's a type error or lint error, please supply the fixes.`;
 
@@ -228,13 +227,14 @@ Please check the latest build logs or error trace and resolve the issue. If it's
             });
 
             return { success: true, julesSessionId };
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
             await step.run("update-webhook-failed", async () => {
                 await prisma.webhookLog.update({
                     where: { id: webhookLogId },
                     data: {
                         status: "failed",
-                        payload: { error: err.message, original: payload }
+                        payload: { error: errorMessage, original: payload } as unknown as import('@prisma/client').Prisma.InputJsonValue
                     }
                 });
             });

@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, CheckCircle2, AlertCircle, Loader2, User, Users } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Loader2, User, Users } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import type { IntegrationProvider, Team } from '@/lib/integrations/types'

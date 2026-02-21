@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { apiError, apiSuccess } from '@/lib/api/response';
 import prisma from '@/lib/db';
 import { decrypt } from '@/lib/security/encryption';
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
         const { userId } = await auth();
         if (!userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return apiError('Unauthorized', 401);
         }
 
         const userSettings = await prisma.userSettings.findUnique({
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
         });
 
         if (!userSettings?.vercelToken) {
-            return NextResponse.json({ error: 'Vercel not connected' }, { status: 400 });
+            return apiError('Vercel not connected', 400);
         }
 
         const token = decrypt(userSettings.vercelToken);
@@ -44,10 +44,23 @@ export async function GET(req: Request) {
             take: 50,
         });
 
+        type VercelDeploymentPayload = {
+            uid?: string;
+            id: string;
+            name: string;
+            url: string;
+            state: 'BUILDING' | 'ERROR' | 'READY' | 'QUEUED' | 'CANCELED';
+            target: 'production' | 'preview';
+            created: number;
+            creator?: { username: string };
+            inspectorUrl: string;
+            meta: Record<string, string>;
+        }
+
         // Merge the local state with Vercel's state
-        const mergedDeployments = vercelDeployments.map((vd: any) => {
-            const localLog = logs.find((log: any) => {
-                const payload = log.payload as any;
+        const mergedDeployments = vercelDeployments.map((vd: VercelDeploymentPayload) => {
+            const localLog = logs.find((log) => {
+                const payload = log.payload as { deployment?: { id: string } };
                 return payload?.deployment?.id === vd.uid; // Vercel API returns 'uid' for deployment id natively sometimes
             });
 
@@ -64,16 +77,13 @@ export async function GET(req: Request) {
                 // Local info
                 fixStatus: localLog?.status, // processing, success, failed
                 julesSessionId: localLog?.julesSessionId,
-                errorMessage: localLog?.status === 'failed' ? (localLog.payload as any)?.error : null
+                errorMessage: localLog?.status === 'failed' ? (localLog.payload as { error?: string })?.error : null
             };
         });
 
-        return NextResponse.json({ deployments: mergedDeployments });
-    } catch (error) {
+        return apiSuccess({ deployments: mergedDeployments });
+    } catch (error: unknown) {
         console.error('Error fetching Vercel deployments:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch deployments' },
-            { status: 500 }
-        );
+        return apiError('Failed to fetch deployments', 500);
     }
 }

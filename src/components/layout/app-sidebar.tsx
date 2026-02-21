@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { useSourcesStore } from '@/stores/use-sources-store'
-import { useSidebarStore } from '@/stores/use-sidebar-store'
+import { useDesktopSidebarStore, useMobileSidebarStore } from '@/stores/use-sidebar-store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -52,7 +52,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ width = 288 }: AppSidebarProps) {
   const pathname = usePathname()
-  const { toggle, setOpen } = useSidebarStore()
+  const toggleDesktop = useDesktopSidebarStore((state) => state.toggle)
+  const setMobileOpen = useMobileSidebarStore((state) => state.setOpen)
   const { isSignedIn, isLoaded } = useUser()
   const isCollapsed = width < 100
 
@@ -76,7 +77,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
 
   const handleLinkClick = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setOpen(false)
+      setMobileOpen(false)
     }
   }
 
@@ -165,7 +166,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    toggle()
+                    toggleDesktop()
                     setReposOpen(true)
                   }}
                   className="text-muted-foreground hover:bg-accent hover:text-foreground mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-lg md:h-8 md:w-8"

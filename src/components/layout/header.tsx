@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ExternalLink, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from '@/components/user/user-menu'
-import { useSidebarStore } from '@/stores/use-sidebar-store'
+import { useDesktopSidebarStore, useMobileSidebarStore } from '@/stores/use-sidebar-store'
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +31,8 @@ export function Header({
   onApiKeys,
   onLogOut,
 }: HeaderProps) {
-  const { toggle } = useSidebarStore()
+  const toggleDesktop = useDesktopSidebarStore((state) => state.toggle)
+  const toggleMobile = useMobileSidebarStore((state) => state.toggle)
 
   return (
     <div className="px-3 pt-0.5 md:pt-3 pb-1.5 md:pb-4 overflow-visible">
@@ -41,10 +42,25 @@ export function Header({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={toggle}
+                onClick={toggleDesktop}
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 flex-shrink-0"
+                className="hidden lg:flex h-8 w-8 p-0 flex-shrink-0"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Toggle sidebar</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={toggleMobile}
+                variant="ghost"
+                size="sm"
+                className="lg:hidden h-8 w-8 p-0 flex-shrink-0"
               >
                 <Menu className="h-4 w-4" />
               </Button>
