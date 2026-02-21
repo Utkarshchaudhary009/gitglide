@@ -1,25 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-
-const JULES_API_URL =
-  process.env.JULES_API_URL || 'https://jules.googleapis.com/v1alpha'
-const JULES_API_KEY = process.env.JULES_API_KEY
+import { JULES_API_URL, validateJulesRequest } from '@/lib/jules-server'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  if (!JULES_API_KEY) {
-    return NextResponse.json(
-      { error: 'Jules API Key not configured' },
-      { status: 500 }
-    )
-  }
+  const validation = await validateJulesRequest()
+  if (validation instanceof NextResponse) return validation
+  const { key } = validation
 
   const { id } = await params
   const { searchParams } = new URL(req.url)
@@ -35,7 +23,7 @@ export async function GET(
       `${JULES_API_URL}/sessions/${id}/activities?${queryParams.toString()}`,
       {
         headers: {
-          'x-goog-api-key': JULES_API_KEY,
+          'x-goog-api-key': key,
           'Content-Type': 'application/json',
         },
       }

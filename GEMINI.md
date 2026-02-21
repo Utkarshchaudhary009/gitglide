@@ -12,14 +12,13 @@
 - Don't read `README.md` by default — state why it's needed first, then use a subagent to summarize relevant parts.
 - Invoke skills once the task domain is clear.
 - Use subagents (with precise, scoped instructions) for docs, research, internet, or non-coding work.
-- Use `rg`/targeted reads to avoid context bloat.
-- Docs: Bun → `refrence/bun`, Vercel SDK → `refrence/vercelsdk`, Jules API → `refrence/jules`.
+- Docs: Bun → `refrence/bun`, Vercel SDK → `D:\code\Docs\vercelsdk`, Jules API → `D:\code\Docs\jules`.
 
 ## Project Structure
 - **CLI tools**: Vercel CLI & GitHub CLI globally installed and logged in.
 - **App Router**: `src/app/` (route groups `(auth)`, `(jules)`, `api/`); `page.tsx`/`layout.tsx` per segment.
 - **Shared code**: UI → `src/components/`, utils → `src/lib/`, state → `src/stores/`, types → `src/types/`.
-- **Other**: styles → `src/app/globals.css`, assets → `public/`, DB → `prisma/schema.prisma`, docs → `docs/` & `refrence/`.
+- **Other**: styles → `src/app/globals.css`, assets → `public/`, DB → `prisma/schema.prisma`, docs →  `D:\code\Docs\`.
 
 ## Commands (Bun only — never npm/pnpm)
 - `bun logs:deployment` — inspect latest Vercel deploy (streams logs on failure, summary on success).
@@ -27,6 +26,23 @@
 
 ## Coding Style
 - Follow Next.js App Router conventions; use `proxy.ts` instead of deprecated `middleware.ts`.
+- **File Conventions (MUST USE where possible)**:
+  - `page.tsx`: Route UI
+  - `layout.tsx`: Shared wrapper
+  - `loading.tsx`: Suspense fallback
+  - `error.tsx`: Error boundary (must be client component)
+  - `not-found.tsx`: 404 UI
+  - `route.ts`: API endpoint
+  - `template.tsx`: Remounts on navigation
+  - `default.tsx`: Parallel route fallback
+- **Routing Patterns**:
+  - **Dynamic**: `[slug]`
+  - **Catch-all**: `[...slug]`
+  - **Optional**: `[[...slug]]`
+  - **Groups**: `(marketing)` (no URL effect)
+  - **Private**: `_folder`
+  - **Parallel**: `@slot` (layout receives as props)
+  - **Intercept**: `(.)` same level, `(..)` up one, `(..)(..)` up two, `(...)` from root
 - **shadcn/ui**: install via `bunx --bun shadcn@latest add <name>` — don't write manually. Existing components in `components/ui/`. [Docs](https://ui.shadcn.com/).
 - **Tailwind CSS v4**: Use `@import "tw-animate-css";` in `globals.css` (instead of `tailwindcss-animate` plugin).
 - **All errors (type & lint) must be fixed** — never skip or ignore.

@@ -6,35 +6,37 @@ export const DEFAULT_WIDTH = 288
 export const MAX_WIDTH = 600
 export const COLLAPSE_THRESHOLD = 100
 
-interface SidebarState {
+interface MobileSidebarState {
   isOpen: boolean
-  width: number
   toggle: () => void
   setOpen: (open: boolean) => void
+}
+
+export const useMobileSidebarStore = create<MobileSidebarState>()((set) => ({
+  isOpen: false,
+  toggle: () => set((state) => ({ isOpen: !state.isOpen })),
+  setOpen: (open) => set({ isOpen: open }),
+}))
+
+interface DesktopSidebarState {
+  width: number
+  toggle: () => void
   setWidth: (width: number) => void
 }
 
-export const useSidebarStore = create<SidebarState>()(
+export const useDesktopSidebarStore = create<DesktopSidebarState>()(
   persist(
     (set, get) => ({
-      isOpen: true,
-      width: RAIL_WIDTH,
+      width: DEFAULT_WIDTH,
       toggle: () => {
-        const { width, isOpen } = get()
-        if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-          const newWidth =
-            width > COLLAPSE_THRESHOLD ? RAIL_WIDTH : DEFAULT_WIDTH
-          set({ width: newWidth, isOpen: true })
-        } else {
-          set({ isOpen: !isOpen, width: !isOpen ? DEFAULT_WIDTH : width })
-        }
+        const { width } = get()
+        const newWidth = width > COLLAPSE_THRESHOLD ? RAIL_WIDTH : DEFAULT_WIDTH
+        set({ width: newWidth })
       },
-      setOpen: (open) =>
-        set({ isOpen: open, width: open ? DEFAULT_WIDTH : get().width }),
       setWidth: (width) => set({ width }),
     }),
     {
-      name: 'sidebar-storage',
+      name: 'sidebar-desktop-storage',
       partialize: (state) => ({ width: state.width }),
     }
   )

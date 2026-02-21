@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 const stateConfig: Record<
   SessionState,
@@ -192,6 +193,12 @@ export function SessionList() {
     fetchSessions()
   }, [fetchSessions])
 
+  React.useEffect(() => {
+    if (error) {
+      toast.error(error)
+    }
+  }, [error])
+
   if (isLoading && sessions.length === 0) {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-1">
@@ -204,8 +211,8 @@ export function SessionList() {
 
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-2xl py-8 text-center">
-        <p className="text-sm text-destructive">{error}</p>
+      <div className="mx-auto w-full max-w-2xl py-12 text-center rounded-lg border border-dashed bg-muted/20">
+        <p className="text-sm text-muted-foreground">Could not load sessions.</p>
       </div>
     )
   }

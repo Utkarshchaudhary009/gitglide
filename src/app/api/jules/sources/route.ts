@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  JULES_API_KEY,
-  JULES_API_URL,
-  validateJulesRequest,
-} from '@/lib/jules-server'
+import { JULES_API_URL, validateJulesRequest } from '@/lib/jules-server'
 
 export async function GET(req: NextRequest) {
-  const validationError = await validateJulesRequest()
-  if (validationError) return validationError
-
-  if (!JULES_API_KEY) {
-    return NextResponse.json(
-      { error: 'Jules API Key not configured' },
-      { status: 500 }
-    )
-  }
+  const validation = await validateJulesRequest()
+  if (validation instanceof NextResponse) return validation
+  const { key } = validation
 
   const { searchParams } = new URL(req.url)
   const pageSize = searchParams.get('pageSize')
@@ -32,7 +22,7 @@ export async function GET(req: NextRequest) {
       `${JULES_API_URL}/sources?${queryParams.toString()}`,
       {
         headers: {
-          'x-goog-api-key': JULES_API_KEY,
+          'x-goog-api-key': key,
           'Content-Type': 'application/json',
         },
         signal: controller.signal,

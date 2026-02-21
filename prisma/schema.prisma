@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model UserSettings {
@@ -22,9 +23,9 @@ model UserSettings {
 model IntegrationConfig {
   id              String   @id @default(cuid())
   clerkUserId     String
-  type            String   // "github_review" | "vercel_fix"
+  type            String   // "github_review" | "vercel_fix" | "vercel_project_<projectId>"
   enabled         Boolean  @default(false)
-  config          Json     @default("{}")
+  config          Json     @default("{}") // Store webhookId here for Vercel projects
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   @@unique([clerkUserId, type])

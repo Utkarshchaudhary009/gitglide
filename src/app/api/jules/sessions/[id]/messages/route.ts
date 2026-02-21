@@ -1,67 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { JULES_API_URL, validateJulesRequest } from '@/lib/jules-server'
+import { z } from 'zod'
 
-const JULES_API_URL =
-  process.env.JULES_API_URL || 'https://jules.googleapis.com/v1alpha'
-const JULES_API_KEY = process.env.JULES_API_KEY
+// Define input schema for request body
+// Strict validation prevents injection and ensures data integrity
+const MessageSchema = z
+  .object({
+    prompt: z.string().optional(),
+    message: z.string().optional(),
+  })
+  .refine((data) => data.prompt || data.message, {
+    message: "Either 'prompt' or 'message' is required",
+    path: ['prompt'],
+  })
+  .transform((data) => ({
+    prompt: data.prompt || data.message || '',
+  }))
+
+// Define param validation schema
+// Restricts ID format to prevent path traversal or injection
+const ParamsSchema = z.object({
+  id: z.string().min(1).regex(/^[a-zA-Z0-9_-]+$/, 'Invalid session ID format'),
+})
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { userId } = await auth()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  // 1. Authenticate & Configure
+  // Centralized check for Auth and API Key presence
+  const validation = await validateJulesRequest()
+  if (validation instanceof NextResponse) return validation
+  const { key } = validation
 
-  if (!JULES_API_KEY) {
-    return NextResponse.json(
-      { error: 'Jules API Key not configured' },
-      { status: 500 }
-    )
-  }
-
+  // 2. Validate Parameters
+  // Next.js params are async in App Router
   const { id } = await params
+  const paramResult = ParamsSchema.safeParse({ id })
+
+  if (!paramResult.success) {
+    console.error(
+      'Invalid Session ID Validation Error:',
+      paramResult.error.format()
+    )
+    return NextResponse.json({ error: 'Invalid Session ID' }, { status: 400 })
+  }
+
+  // 3. Validate Body
+  let body
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  const result = MessageSchema.safeParse(body)
+
+  if (!result.success) {
+    console.error('Validation Error for Message:', result.error.format())
+    return NextResponse.json({ error: 'Validation Error' }, { status: 400 })
+  }
+
+  const { prompt } = result.data
 
   try {
-    const body = await req.json()
-    // The docs say: POST /v1alpha/sessions/{sessionId}:sendMessage
-    // Body: { prompt: "message" }
+    // 4. Upstream Request
+    // Encode URI component to prevent any remaining injection risks
+    const safeId = encodeURIComponent(paramResult.data.id)
+    const upstreamUrl = `${JULES_API_URL}/sessions/${safeId}:sendMessage`
 
-    if (!body.prompt && !body.message) {
+    const response = await fetch(upstreamUrl, {
+      method: 'POST',
+      headers: {
+        'x-goog-api-key': key,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
+    })
+
+    if (!response.ok) {
+      // Log the full error for debugging but return a generic message unless it's a known safe error
+      console.error('Jules API Error: upstream service returned an error')
+
       return NextResponse.json(
-        { error: 'Prompt/Message is required' },
-        { status: 400 }
+        { error: 'Failed to process message with upstream service.' },
+        { status: response.status }
       )
     }
 
-    // Map 'message' to 'prompt' if needed, or pass through
-    const payload = {
-      prompt: body.prompt || body.message,
-    }
-
-    const response = await fetch(
-      `${JULES_API_URL}/sessions/${id}:sendMessage`,
-      {
-        method: 'POST',
-        headers: {
-          'x-goog-api-key': JULES_API_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      }
-    )
-
-    if (!response.ok) {
-      const error = await response.text()
-      return NextResponse.json({ error }, { status: response.status })
-    }
-
-    // Returns empty on success usually
     const data = await response.json().catch(() => ({}))
     return NextResponse.json(data)
-  } catch (error) {
-    console.error(`Failed to send message to session ${id}:`, error)
+  } catch {
+    console.error('Internal Server Error processing message')
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

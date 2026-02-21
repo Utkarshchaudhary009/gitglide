@@ -5,11 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Home,
-  ListTodo,
-  Calendar,
   Plug,
   Rocket,
-  Settings,
   GitBranch,
   Loader2,
   Search,
@@ -20,7 +17,7 @@ import {
 } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { useSourcesStore } from '@/stores/use-sources-store'
-import { useSidebarStore } from '@/stores/use-sidebar-store'
+import { useDesktopSidebarStore, useMobileSidebarStore } from '@/stores/use-sidebar-store'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,11 +36,8 @@ import {
 
 const navItems = [
   { title: 'Home', icon: Home, href: '/app', exact: true },
-  { title: 'Tasks', icon: ListTodo, href: '/app/tasks' },
-  { title: 'Scheduled Tasks', icon: Calendar, href: '/app/scheduled' },
   { title: 'Integrations', icon: Plug, href: '/app/integrations' },
-  { title: 'Deployments', icon: Rocket, href: '/app/deployments' },
-  { title: 'Settings', icon: Settings, href: '/app/settings' },
+  { title: 'Deployments', icon: Rocket, href: '/app/integrations/vercel' },
 ]
 
 interface AppSidebarProps {
@@ -52,8 +46,9 @@ interface AppSidebarProps {
 
 export function AppSidebar({ width = 288 }: AppSidebarProps) {
   const pathname = usePathname()
-  const { toggle, setOpen } = useSidebarStore()
-  const { isSignedIn } = useUser()
+  const toggleDesktop = useDesktopSidebarStore((state) => state.toggle)
+  const setMobileOpen = useMobileSidebarStore((state) => state.setOpen)
+  const { isSignedIn, isLoaded } = useUser()
   const isCollapsed = width < 100
 
   const { sources, fetchSources, isLoading, isConfigured, hasFetched } =
@@ -62,10 +57,10 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
   const [searchQuery, setSearchQuery] = React.useState('')
 
   React.useEffect(() => {
-    if (isSignedIn) {
+    if (isLoaded && isSignedIn) {
       fetchSources()
     }
-  }, [fetchSources, isSignedIn])
+  }, [fetchSources, isLoaded, isSignedIn])
 
   const filteredSources = React.useMemo(() => {
     return sources.filter((source) => {
@@ -76,7 +71,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
 
   const handleLinkClick = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setOpen(false)
+      setMobileOpen(false)
     }
   }
 
@@ -165,7 +160,7 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    toggle()
+                    toggleDesktop()
                     setReposOpen(true)
                   }}
                   className="text-muted-foreground hover:bg-accent hover:text-foreground mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-lg md:h-8 md:w-8"
@@ -198,7 +193,12 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2 pt-2">
-                {!isSignedIn ? (
+                {!isLoaded ? (
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 py-3 text-xs">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Loading...
+                  </div>
+                ) : !isSignedIn ? (
                   <Card className="border-dashed">
                     <CardContent className="text-muted-foreground p-3 text-center text-xs">
                       <AlertCircle className="text-muted-foreground/70 mx-auto mb-1.5 h-4 w-4" />
@@ -259,21 +259,18 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                         </p>
                       ) : (
                         filteredSources.map((source) => {
-                          const repoPath = `/app/repos/${source.githubRepo.owner}/${source.githubRepo.repo}`
-                          const isActive = isNavActive(repoPath)
-
+                          const repoUrl = `https://github.com/${source.githubRepo.owner}/${source.githubRepo.repo}`
+                          
                           return (
                             <Link
                               key={source.id}
-                              href={repoPath}
+                              href={repoUrl}
+                              target="_blank"
                               onClick={handleLinkClick}
                             >
                               <div
                                 className={cn(
-                                  'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors',
-                                  isActive
-                                    ? 'bg-accent text-accent-foreground'
-                                    : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                                  'flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                                 )}
                               >
                                 <GitBranch className="h-3 w-3 flex-shrink-0" />
