@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-
-interface VercelProject {
+import { useVercelProjectsStore } from '@/stores/use-vercel-projects-store'
+export interface VercelProject {
     id: string
     name: string
     framework?: string
