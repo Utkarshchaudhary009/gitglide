@@ -6,7 +6,6 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Loader2, AlertCircle } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useVercelProjectsStore } from '@/stores/use-vercel-projects-store'
 export interface VercelProject {
     id: string
@@ -23,6 +22,12 @@ export function VercelProjectsList() {
         fetchProjects()
     }, [fetchProjects])
 
+    useEffect(() => {
+        if (error) {
+            toast.error(error)
+        }
+    }, [error])
+
     if (isLoading) {
         return (
             <div className="flex h-48 items-center justify-center">
@@ -33,11 +38,10 @@ export function VercelProjectsList() {
 
     if (error) {
         return (
-            <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center h-48">
+                <AlertCircle className="mx-auto h-8 w-8 text-destructive mb-4 opacity-50" />
+                <p className="text-sm text-muted-foreground">Failed to load Vercel projects</p>
+            </div>
         )
     }
 

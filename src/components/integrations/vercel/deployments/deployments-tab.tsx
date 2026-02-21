@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { ExternalLink, Loader2, AlertCircle, CheckCircle2, Clock } from 'lucide-react'
 import { useVercelDeploymentsStore, type Deployment } from '@/stores/use-vercel-deployments-store'
 import { formatDistanceToNow } from 'date-fns'
+import { toast } from 'sonner'
 
 const STATUS_CONFIG: Record<
     string,
@@ -23,6 +24,12 @@ export function DeploymentsTab() {
         fetchDeployments()
     }, [fetchDeployments])
 
+    useEffect(() => {
+        if (error) {
+            toast.error(error)
+        }
+    }, [error])
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -33,11 +40,10 @@ export function DeploymentsTab() {
 
     if (error) {
         return (
-            <Card>
-                <CardContent className="py-8 sm:py-12 text-center text-sm sm:text-base text-destructive">
-                    {error}
-                </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center h-48">
+                <AlertCircle className="mx-auto h-8 w-8 text-destructive mb-4 opacity-50" />
+                <p className="text-sm text-muted-foreground">Failed to load Deployments</p>
+            </div>
         )
     }
 

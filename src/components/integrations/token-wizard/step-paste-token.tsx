@@ -4,7 +4,8 @@ import { ArrowLeft, CheckCircle2, AlertCircle, Loader2, User, Users } from 'luci
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import type { IntegrationProvider, Team } from '@/lib/integrations/types'
-
+import { toast } from 'sonner'
+import { useEffect } from 'react'
 
 interface StepPasteTokenProps {
   provider: IntegrationProvider
@@ -40,6 +41,12 @@ export function StepPasteToken({
   const isValidFormat = token.length > 10
   const showScopeSelection = provider === 'vercel'
 
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+    }
+  }, [error])
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -66,13 +73,6 @@ export function StepPasteToken({
               <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
             )}
           </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              {error}
-            </div>
-          )}
 
           {progressMessage && !error && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
