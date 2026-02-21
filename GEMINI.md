@@ -12,7 +12,6 @@
 - Don't read `README.md` by default — state why it's needed first, then use a subagent to summarize relevant parts.
 - Invoke skills once the task domain is clear.
 - Use subagents (with precise, scoped instructions) for docs, research, internet, or non-coding work.
-- Use `rg`/targeted reads to avoid context bloat.
 - Docs: Bun → `refrence/bun`, Vercel SDK → `D:\code\Docs\vercelsdk`, Jules API → `D:\code\Docs\jules`.
 
 ## Project Structure

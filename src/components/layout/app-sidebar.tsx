@@ -53,7 +53,7 @@ interface AppSidebarProps {
 export function AppSidebar({ width = 288 }: AppSidebarProps) {
   const pathname = usePathname()
   const { toggle, setOpen } = useSidebarStore()
-  const { isSignedIn } = useUser()
+  const { isSignedIn, isLoaded } = useUser()
   const isCollapsed = width < 100
 
   const { sources, fetchSources, isLoading, isConfigured, hasFetched } =
@@ -62,10 +62,10 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
   const [searchQuery, setSearchQuery] = React.useState('')
 
   React.useEffect(() => {
-    if (isSignedIn) {
+    if (isLoaded && isSignedIn) {
       fetchSources()
     }
-  }, [fetchSources, isSignedIn])
+  }, [fetchSources, isLoaded, isSignedIn])
 
   const filteredSources = React.useMemo(() => {
     return sources.filter((source) => {
@@ -198,7 +198,12 @@ export function AppSidebar({ width = 288 }: AppSidebarProps) {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2 pt-2">
-                {!isSignedIn ? (
+                {!isLoaded ? (
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 py-3 text-xs">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Loading...
+                  </div>
+                ) : !isSignedIn ? (
                   <Card className="border-dashed">
                     <CardContent className="text-muted-foreground p-3 text-center text-xs">
                       <AlertCircle className="text-muted-foreground/70 mx-auto mb-1.5 h-4 w-4" />

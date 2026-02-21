@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -58,6 +59,11 @@ export function ConnectionCard({
                   <span className="sm:hidden">Reconnect</span>
                   <span className="hidden sm:inline">Reconnect</span>
                 </Button>
+                {provider === 'vercel' && (
+                  <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-none">
+                    <Link href="/app/integrations/vercel">Manage</Link>
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={onDisconnect} className="flex-1 sm:flex-none">
                   <Unplug className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
                   <span className="sm:hidden">Disconnect</span>
